@@ -1,0 +1,30 @@
+{
+	"name": "stepapo/model",
+	"type": "library",
+	"description": "Library that uses structured DB definitions to generate DDL and DML queries and Nextras ORM entity properties.",
+	"keywords": ["nette", "nextras", "model"],
+	"homepage": "https://github.com/stepapo/model",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Štěpán Postler"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/stepapo/model/issues"
+	},
+	"require": {
+		"php": ">=8.1",
+		"nette/di": "^3.2",
+		"nette/utils": "^4.0",
+		"nextras/dbal": "^4.0",
+		"nextras/orm": "^4.0",
+		"stepapo/generator": "dev-main",
+		"stepapo/utils": "dev-main"
+	},
+	"autoload": {
+		"psr-4": {
+			"Stepapo\\Model\\": "src/"
+		}
+	}
+}
