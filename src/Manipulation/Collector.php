@@ -21,7 +21,7 @@ class Collector implements Service
 		private bool $debugMode,
 		private bool $testMode,
 	) {}
-	
+
 
 	public function getManipulationList(array $folders): ManipulationList
 	{
@@ -94,10 +94,6 @@ class Collector implements Service
 
 	public function mergeItems(string $class, array $one, array $two, bool $override): array
 	{
-		if ($class === WebData::class) {
-			Dumper::dump($one);
-			Dumper::dump($two);
-		}
 		foreach ($two as $itemName => $data) {
 			if (is_numeric($itemName)) {
 				$one[] = $data;
