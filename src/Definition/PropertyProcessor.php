@@ -27,66 +27,93 @@ class PropertyProcessor
 	{
 		$count = 0;
 		$start = microtime(true);
+		$reset = false;
+		foreach ($_SERVER['argv'] as $arg) {
+			if ($arg === '--reset') {
+				$reset = true;
+				break;
+			}
+		}
 		$this->printer->printBigSeparator();
 		$this->printer->printLine('Properties', 'aqua');
 		$this->printer->printSeparator();
 		try {
 			$definition = $this->collector->getDefinition($folders);
+			# GETTING ORIGINAL COMMENTS
+			$commentsBefore = [];
 			foreach ($definition->schemas as $schema) {
 				foreach ($schema->tables as $table) {
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$this->printer->printText($table->name, 'white');
-					$this->printer->printText(": generating simple properties");
-					$this->generator->updateEntity($table);
-					$this->printer->printOk();
-					$count++;
+					$commentsBefore[$table->name] = $this->generator->getEntityComments($table);
 				}
 			}
+			# GENERATING SIMPLE PROPERTIES
 			foreach ($definition->schemas as $schema) {
 				foreach ($schema->tables as $table) {
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$this->printer->printText($table->name, 'white');
-					$this->printer->printText(": generating 1:m properties");
+					$this->generator->updateEntity($table);
+				}
+			}
+			# GENERATING 1:M PROPERTIES
+			foreach ($definition->schemas as $schema) {
+				foreach ($schema->tables as $table) {
+					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
+						continue;
+					}
 					foreach ($table->foreignKeys as $foreignKey) {
 						if ($foreignKey->reverseName) {
 							$this->generator->updateEntityOneHasMany($table, $foreignKey);
 						}
 					}
-					$this->printer->printOk();
-					$count++;
 				}
 			}
+			# GENERATING M:M PROPERTIES
 			foreach ($definition->schemas as $schema) {
 				foreach ($schema->tables as $table) {
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
-						$this->printer->printText($table->name, 'white');
-						$this->printer->printText(": generating m:m properties");
 						$from = Arrays::first($table->foreignKeys);
 						$to = Arrays::last($table->foreignKeys);
 						$this->generator->updateEntityManyHasMany($from, $to, true);
 						if ($to->reverseName) {
 							$this->generator->updateEntityManyHasMany($to, $from);
 						}
-						$this->printer->printOk();
-						$count++;
 					}
 				}
 			}
+			# SORTING PROPERTIES
 			foreach ($definition->schemas as $schema) {
 				foreach ($schema->tables as $table) {
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$this->printer->printText($table->name, 'white');
-					$this->printer->printText(": sorting properties");
 					$this->generator->updateEntitySortComments($table);
+				}
+			}
+			# GETTING UPDATED COMMENTS
+			$commentsAfter = [];
+			foreach ($definition->schemas as $schema) {
+				foreach ($schema->tables as $table) {
+					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
+						continue;
+					}
+					$commentsAfter[$table->name] = $this->generator->getEntityComments($table);
+				}
+			}
+			# CHECKING FOR CHANGES
+			foreach ($commentsAfter as $tableName => $commentAfter) {
+				if ($reset || $commentAfter !== $commentsBefore[$tableName]) {
+					$this->printer->printText($tableName, 'white');
+					$this->printer->printText(": updated properties");
 					$this->printer->printOk();
 					$count++;
 				}
+			}
+			if ($count === 0) {
+				$this->printer->printLine('No changes');
 			}
 			$this->printer->printSeparator();
 			$end = microtime(true);
