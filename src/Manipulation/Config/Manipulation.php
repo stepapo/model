@@ -16,6 +16,7 @@ class Manipulation extends Schematic
 	public array $modes = ['prod', 'dev', 'test'];
 	public bool $skipDefaults = false;
 	public bool $forceUpdate = true;
+	public bool $override = false;
 	public int $iteration = 1;
 	/** @var Item[]|array */ public array $items;
 

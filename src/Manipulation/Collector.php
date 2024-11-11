@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Manipulation;
 
+use App\Model\Web\WebData;
 use Nette\InvalidArgumentException;
 use Nette\Utils\FileInfo;
 use Nette\Utils\Finder;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Utils\Service;
+use Tracy\Dumper;
 
 
 class Collector implements Service
@@ -19,24 +21,27 @@ class Collector implements Service
 		private bool $debugMode,
 		private bool $testMode,
 	) {}
+	
 
 	public function getManipulationList(array $folders): ManipulationList
 	{
-		$files = [];
+		$configs = [];
 		foreach ($folders as $folder) {
-			$neonFiles = Finder::findFiles("*.neon")->from($folder);
-			$files = array_merge($files, $neonFiles->collect());
+			$files = Finder::findFiles("*.neon")->from($folder)->sortByName();
+			foreach ($files as $file) {
+				$configs[] = Manipulation::neonToArray($file->getPathname(), $this->parameters);
+			}
 		}
 		$list = [];
 		$manipulationList = new ManipulationList;
-		/** @var FileInfo $file */
-		foreach ($files as $file) {
-			$config = Manipulation::neonToArray($file->getPathname(), $this->parameters);
+		usort($configs, fn(array $a, array $b) => ($a['override'] ?? false) <=> ($b['override'] ?? false));
+		foreach ($configs as $config) {
 			$iteration = $config['iteration'] ?? 1;
 			$class = $config['class'];
-			$forceUpdate = $config['forceUpdate'] ?? false;
+			$forceUpdate = $config['forceUpdate'] ?? true;
 			$items = $config['items'] ?? [];
 			$modes = $config['modes'] ?? ['prod', 'dev', 'test'];
+			$override = $config['override'] ?? false;
 			$prodMode = !$this->debugMode && !$this->testMode;
 			if (
 				($prodMode && !in_array('prod', $modes, true))
@@ -46,7 +51,7 @@ class Collector implements Service
 				continue;
 			}
 			if (isset($list[$iteration][$class][$forceUpdate])) {
-				$list[$iteration][$class][$forceUpdate]['items'] = $this->mergeItems($class, $list[$iteration][$class][$forceUpdate]['items'], $items);
+				$list[$iteration][$class][$forceUpdate]['items'] = $this->mergeItems($class, $list[$iteration][$class][$forceUpdate]['items'], $items, $override);
 			} else {
 				$list[$iteration][$class][$forceUpdate] = $config;
 			}
@@ -87,28 +92,40 @@ class Collector implements Service
 //	}
 
 
-	public function mergeItems(string $class, array $one, array $two): array
+	public function mergeItems(string $class, array $one, array $two, bool $override): array
 	{
+		if ($class === WebData::class) {
+			Dumper::dump($one);
+			Dumper::dump($two);
+		}
 		foreach ($two as $itemName => $data) {
 			if (is_numeric($itemName)) {
 				$one[] = $data;
 			} elseif (is_array($data)) {
-				$one[$itemName] = $this->mergeItem($class, $itemName, $one[$itemName] ?? [], $two[$itemName]);
-			} elseif ($one[$itemName] !== $two[$itemName]) {
-				throw new InvalidArgumentException("Unambiguous definition of item '$itemName' of class '$class'.");
+				$one[$itemName] = $this->mergeItem($class, $itemName, $one[$itemName] ?? [], $two[$itemName], $override);
+			} elseif (isset($one[$itemName]) && $one[$itemName] !== $two[$itemName]) {
+				if ($override) {
+					$one[$itemName] = $two[$itemName];
+				} else {
+					throw new InvalidArgumentException("Unambiguous definition of item '$itemName' of class '$class'.");
+				}
 			}
 		}
 		return $one;
 	}
 
 
-	public function mergeItem(string $class, string $itemName, array $one, array $two): array
+	public function mergeItem(string $class, string $itemName, array $one, array $two, bool $override): array
 	{
 		foreach ($two as $valueName => $value) {
 			if (is_array($value)) {
-				$one[$valueName] = $this->mergeItem($class, (string) $valueName, $one[$valueName] ?? [], $two[$valueName]);
+				$one[$valueName] = $this->mergeItem($class, (string) $valueName, $one[$valueName] ?? [], $two[$valueName], $override);
 			} elseif (isset($one[$valueName]) && $one[$valueName] !== $two[$valueName]) {
-				throw new InvalidArgumentException("Unambiguous definition of value '$valueName' in item '$itemName' of class '$class'.");
+				if ($override) {
+					$one[$valueName] = $two[$valueName];
+				} else {
+					throw new InvalidArgumentException("Unambiguous definition of value '$valueName' in item '$itemName' of class '$class'.");
+				}
 			} else {
 				$one[$valueName] = $value;
 			}
