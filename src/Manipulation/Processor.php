@@ -122,7 +122,8 @@ class Processor implements Service
 				$resolved = true;
 				if ($groups[$name]->dependencies) {
 					foreach ($groups[$name]->dependencies as $dependency) {
-						if (!isset($doneGroups[$dependency])) {
+						$c = $this->getDependentGroupClass($dependency, $groups);
+						if (!isset($doneGroups[$dependency]) && isset($classes[$c])) {
 							$resolved = false;
 							break;
 						}
@@ -140,5 +141,16 @@ class Processor implements Service
 			}
 		}
 		return $sortedClasses;
+	}
+
+
+	private function getDependentGroupClass(string $dependency, array $groups): string
+	{
+		foreach ($groups as $group) {
+			if ($group->name === $dependency) {
+				return $group->class;
+			}
+		}
+		throw new \InvalidArgumentException();
 	}
 }
