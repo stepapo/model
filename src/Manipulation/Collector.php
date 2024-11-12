@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Manipulation;
 
-use App\Model\Web\WebData;
 use Nette\InvalidArgumentException;
-use Nette\Utils\FileInfo;
 use Nette\Utils\Finder;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Utils\Service;
-use Tracy\Dumper;
 
 
 class Collector implements Service
@@ -60,7 +57,8 @@ class Collector implements Service
 			foreach ($classes as $class => $forceUpdates) {
 				foreach ($forceUpdates as $config) {
 					try {
-						$manipulation = Manipulation::createFromArray($config, skipDefaults: $config['skipDefaults'] ?? false);
+						$iteration = $config['iteration'] ?? 1;
+						$manipulation = Manipulation::createFromArray($config, skipDefaults: $iteration > 1);
 					} catch (\Exception $e) {
 						throw new InvalidArgumentException("Error in class '$class': " . $e->getMessage());
 					}

@@ -3,11 +3,10 @@
 namespace Stepapo\Model\Manipulation;
 
 use App\Model\Orm;
-use Stepapo\Utils\Printer;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
+use Stepapo\Utils\Printer;
 use Stepapo\Utils\Service;
-use Stepapo\Model\Manipulation\ManipulationGroup;
 
 
 class Processor implements Service
@@ -40,7 +39,6 @@ class Processor implements Service
 						foreach ($forceUpdates as $manipulation) {
 							$group = $groups[$manipulation->class] ?? throw new \LogicException("ManipulationGroup for class '$manipulation->class' not defined.");
 							$repository = $this->orm->getRepositoryByName($group->name . 'Repository');
-
 							foreach ($manipulation->items as $itemName => $item) {
 								$entity = $repository->getByData($item);
 								if ($entity) {
