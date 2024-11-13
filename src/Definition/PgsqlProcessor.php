@@ -140,7 +140,6 @@ class PgsqlProcessor implements DbProcessor
 
 	private function processTable(string $type, Schema $schema, Table $table, array $setup)
 	{
-
 		if (isset($setup['all']) && $setup['all'] === true) {
 			(fn() => match ($type) {
 				'create' => $this->createTable($schema, $table),
