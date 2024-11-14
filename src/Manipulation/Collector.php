@@ -58,7 +58,8 @@ class Collector implements Service
 				foreach ($forceUpdates as $config) {
 					try {
 						$iteration = $config['iteration'] ?? 1;
-						$manipulation = Manipulation::createFromArray($config, skipDefaults: $iteration > 1);
+						$skipDefaults = $config['skipDefaults'] ?? false;
+						$manipulation = Manipulation::createFromArray($config, skipDefaults: $skipDefaults || $iteration > 1);
 					} catch (\Exception $e) {
 						throw new InvalidArgumentException("Error in class '$class': " . $e->getMessage());
 					}
