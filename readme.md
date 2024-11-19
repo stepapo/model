@@ -21,6 +21,7 @@ stepapo.model:
     testMode: # true or false,
     driver: # mysql|pqsql,
     database: # default db schema,
+    schemas: # array of schemas to work with
 ```
 
 ## Usage
@@ -78,7 +79,7 @@ class Person extends Stepapo\Model\Orm\StepapoEntity
 
 ```php
 $generator = new Stepapo\Generator\Generator;
-$propertyProcessor = new PropertyProcessor($generator);
+$propertyProcessor = new PropertyProcessor(['defaultSchema' => /* 'public' for pgsql, db name for mysql */], $generator);
 $propertyProcessor->process([__DIR__ . '/../config/definitions']);
 ```
 

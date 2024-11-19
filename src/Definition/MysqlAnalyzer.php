@@ -14,6 +14,7 @@ use Stepapo\Model\Definition\Config\Primary;
 use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
+use Tracy\Dumper;
 
 
 class MysqlAnalyzer implements Analyzer
@@ -37,41 +38,50 @@ class MysqlAnalyzer implements Analyzer
 				$table = new Table;
 				$table->name = $t->name;
 				$schema->tables[$t->name] = $table;
-				foreach ($this->getColumns((int) $t->id) as $c) {
+				foreach ($this->getColumns($s, $t->name) as $c) {
 					$column = new Column;
 					$column->name = $c->name;
-					$column->type = $this->getType($c->type);
-					$column->default = $c->is_primary ? null : $c->default;
-					$column->null = $c->is_nullable;
-					$column->auto = $c->is_autoincrement;
+					$type = $this->getType($c->type);
+					$column->type = $type;
+					$column->default = $c->is_primary ? null : $this->getDefault($c->default, $type);
+					$column->null = $c->is_nullable === 1;
+					$column->auto = $c->is_autoincrement === 1;
 					$table->columns[$c->name] = $column;
 				}
-				foreach ($this->getForeignKeys((int) $t->id) as $f) {
+				foreach ($this->getForeignKeys($s, $t->name) as $f) {
 					$foreignKey = new Foreign;
 					$foreignKey->name = $f->name;
 					$foreignKey->keyColumn = $f->column;
 					$foreignKey->schema = $f->ref_table_schema;
 					$foreignKey->table = $f->ref_table;
 					$foreignKey->column = $f->ref_column;
-					$foreignKey->onUpdate = $f->on_update;
-					$foreignKey->onDelete = $f->on_delete;
+					$foreignKey->onUpdate = $this->getRestriction($f->on_update);
+					$foreignKey->onDelete = $this->getRestriction($f->on_delete);
 					$table->foreignKeys[$f->name] = $foreignKey;
 				}
-				foreach ($this->getUniqueKeys((int) $t->id) as $u) {
+				foreach ($this->getUniqueKeys($s, $t->name) as $u) {
 					$unique = new Unique;
 					$unique->name = $u->name;
-					$unique->columns = $this->getKeyColumns((int) $u->id);
+					$unique->columns = $this->getKeyColumns($u->name, $s, $t->name);
 					$table->uniqueKeys[$u->name] = $unique;
 				}
-				$p = $this->getPrimaryKey((int) $t->id);
-				foreach ($this->getIndexes((int) $t->id) as $i) {
-					$index = new Index;
-					$index->name = $i->name;
-					$index->columns = $this->getKeyColumns((int) $i->id);
-					$table->indexes[$i->name] = $index;
+				$p = $this->getPrimaryKey($s, $t->name);
+				foreach ($this->getIndexesWithColumns($s, $t->name) as $i) {
+					if (isset($table->indexes[$i->name])) {
+						$table->indexes[$i->name]->columns[] = $i->column;
+					} else {
+						if ($i->type === 'FULLTEXT') {
+							$table->columns[$i->column]->type = 'fulltext';
+						} else {
+							$index = new Index;
+							$index->name = $i->name;
+							$index->columns = [$i->column];
+							$table->indexes[$i->name] = $index;
+						}
+					}
 				}
 				$primary = new Primary;
-				$primary->columns = $this->getKeyColumns((int) $p->id);
+				$primary->columns = $this->getKeyColumns($p->name, $s, $t->name);
 				$table->primaryKey = $primary;
 			}
 		}
@@ -81,131 +91,140 @@ class MysqlAnalyzer implements Analyzer
 
 	private function getTables(string $schema): array
 	{
-//		return $this->dbal->query("
-//			SELECT
-//				TABLE_SCHEMA,
-//				TABLE_NAME,
-//				TABLE_TYPE
-//			FROM information_schema.TABLES
-//			-- SCHEMA
-//			WHERE TABLE_SCHEMA = %s;
-//		", 'public')->fetchAll();
 		return $this->dbal->query("
-			SELECT DISTINCT ON (pg_class.relname)
-			    pg_class.oid AS id,
-				pg_class.relname::varchar AS name,
-				pg_namespace.nspname::varchar AS schema
-			FROM pg_catalog.pg_class
-			JOIN pg_catalog.pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-			WHERE pg_class.relkind = 'r'
-			-- SCHEMA
-			AND pg_namespace.nspname IN (%s)
-			ORDER BY pg_class.relname
+			SELECT 
+			    TABLE_NAME AS name
+			FROM information_schema.TABLES
+			WHERE TABLE_SCHEMA = %s 
+			AND TABLE_TYPE = 'BASE TABLE'
+			ORDER BY TABLE_NAME
 		", $schema)->fetchAll();
 	}
 
 
-	private function getColumns(int $id): array
-	{
-		return $this->dbal->query("
-			SELECT
-			  pg_attribute.attname::varchar AS name,
-			  UPPER(pg_type.typname) AS type,
-			  CASE WHEN pg_attribute.atttypmod = -1 THEN NULL ELSE pg_attribute.atttypmod -4 END AS size,
-			  pg_catalog.pg_get_expr(pg_attrdef.adbin, 'pg_catalog.pg_attrdef'::regclass)::varchar AS default,
-			  COALESCE(pg_constraint.contype = 'p', FALSE) AS is_primary,
-			  COALESCE(pg_constraint.contype = 'p' AND strpos(pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid), 'nextval') = 1, FALSE) AS is_autoincrement,
-			  NOT (pg_attribute.attnotnull OR pg_type.typtype = 'd' AND pg_type.typnotnull) AS is_nullable
-			FROM pg_catalog.pg_attribute
-			JOIN pg_catalog.pg_class ON pg_attribute.attrelid = pg_class.oid
-			JOIN pg_catalog.pg_type ON pg_attribute.atttypid = pg_type.oid
-			LEFT JOIN pg_catalog.pg_attrdef ON pg_attrdef.adrelid = pg_class.oid AND pg_attrdef.adnum = pg_attribute.attnum
-			LEFT JOIN pg_catalog.pg_constraint ON pg_constraint.connamespace = pg_class.relnamespace AND contype = 'p' AND pg_constraint.conrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
-			WHERE pg_class.relkind IN ('r')
-			-- TABLE ID:
-			AND pg_class.oid = %i
-			AND pg_attribute.attnum > 0
-			AND NOT pg_attribute.attisdropped
-			ORDER BY pg_attribute.attnum
-		", $id)->fetchAll();
-	}
-
-
-	private function getUniqueKeys(int $id): array
-	{
-		return $this->dbal->query("
-			SELECT
-			    pg_constraint.conindid AS id,
-				pg_constraint.conname::varchar AS name
-			FROM pg_catalog.pg_constraint
-			WHERE pg_constraint.contype = 'u'
-			AND pg_constraint.conrelid = %i
-		", $id)->fetchAll();
-	}
-
-
-	private function getPrimaryKey(int $id): Row
-	{
-		return $this->dbal->query("
-			SELECT
-			    pg_constraint.conindid AS id,
-				pg_constraint.conname::varchar AS name
-			FROM pg_catalog.pg_constraint
-			WHERE pg_constraint.contype = 'p'
-			AND pg_constraint.conrelid = %i
-		", $id)->fetch();
-	}
-
-
-	private function getForeignKeys(int $id): array
-	{
-		return $this->dbal->query("
-			SELECT
-				pg_constraint.conname::varchar AS name,
-				pg_namespace.nspname::varchar AS schema,
-				pg_attribute.attname::varchar AS column,
-				pg_class_foreign.relname::varchar AS ref_table,
-				pg_namespace_foreign.nspname::varchar AS ref_table_schema,
-				pg_attribute_foreign.attname::varchar AS ref_column,
-				pg_constraint.confupdtype::varchar AS on_update,
-				pg_constraint.confdeltype::varchar AS on_delete
-			FROM pg_catalog.pg_constraint
-			JOIN pg_catalog.pg_class ON pg_constraint.conrelid = pg_class.oid
-			JOIN pg_catalog.pg_class AS pg_class_foreign ON pg_constraint.confrelid = pg_class_foreign.oid
-			JOIN pg_catalog.pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-			JOIN pg_catalog.pg_namespace AS pg_namespace_foreign ON pg_namespace_foreign.oid = pg_class_foreign.relnamespace
-			JOIN pg_catalog.pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = pg_constraint.conkey[1]
-			JOIN pg_catalog.pg_attribute AS pg_attribute_foreign ON pg_attribute_foreign.attrelid = pg_class_foreign.oid AND pg_attribute_foreign.attnum = pg_constraint.confkey[1]
-			WHERE pg_constraint.contype = 'f'
-			AND pg_class.oid = %i
-		", $id)->fetchAll();
-	}
-
-
-	private function getIndexes(int $id): array
+	private function getColumns(string $schema, string $table): array
 	{
 		return $this->dbal->query("
 			SELECT 
-				pg_index.indexrelid AS id,
-				pg_index.indexrelid::regclass as name
-			FROM pg_catalog.pg_index
-			JOIN pg_catalog.pg_class ON pg_class.oid = pg_index.indrelid
-			WHERE pg_class.oid = %i 
-			AND pg_index.indisprimary = false
-			AND pg_index.indisunique = false
-		", $id)->fetchAll();
+				COLUMN_NAME AS name,
+				DATA_TYPE AS `type`,
+				COLUMN_DEFAULT as `default`,
+				IF(COLUMN_KEY='PRI',1,0) AS is_primary,
+				IF(EXTRA='auto_increment',1,0) AS is_autoincrement,
+				IF(IS_NULLABLE='YES',1,0) AS is_nullable
+			FROM information_schema.COLUMNS
+			WHERE TABLE_SCHEMA = %s
+			AND TABLE_NAME = %s
+			ORDER BY COLUMN_NAME
+		", $schema, $table)->fetchAll();
 	}
 
 
-	private function getKeyColumns(int $id): array
+	private function getUniqueKeys(string $schema, string $table): array
 	{
 		return $this->dbal->query("
-			SELECT pg_catalog.pg_get_indexdef(pg_attribute.attrelid, pg_attribute.attnum, true) AS column
-			FROM pg_catalog.pg_attribute
-			-- INDEX ID:
-			WHERE pg_attribute.attrelid = %i
-			ORDER BY pg_attribute.attnum
-		", $id)->fetchPairs(null, 'column');
+			SELECT
+			    CONSTRAINT_NAME as name,
+				TABLE_SCHEMA as `schema`,
+				TABLE_NAME as `table`
+			FROM information_schema.TABLE_CONSTRAINTS
+			WHERE TABLE_SCHEMA = %s
+			AND TABLE_NAME = %s
+			AND CONSTRAINT_TYPE = 'UNIQUE'
+			ORDER BY CONSTRAINT_NAME
+		", $schema, $table)->fetchAll();
+	}
+
+
+	private function getPrimaryKey(string $schema, string $table): Row
+	{
+		return $this->dbal->query("
+			SELECT
+			    CONSTRAINT_NAME as name,
+				TABLE_SCHEMA as `schema`,
+				TABLE_NAME as `table`
+			FROM information_schema.TABLE_CONSTRAINTS
+			WHERE TABLE_SCHEMA = %s
+			AND TABLE_NAME = %s
+			AND CONSTRAINT_TYPE = 'PRIMARY KEY'
+		", $schema, $table)->fetch();
+	}
+
+
+	private function getForeignKeys(string $schema, string $table): array
+	{
+		return $this->dbal->query("
+			SELECT
+			    REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME AS name,
+				KEY_COLUMN_USAGE.TABLE_SCHEMA AS `schema`,
+				KEY_COLUMN_USAGE.TABLE_NAME AS `table`,
+				KEY_COLUMN_USAGE.COLUMN_NAME AS `column`,
+				KEY_COLUMN_USAGE.REFERENCED_TABLE_SCHEMA AS ref_table_schema,
+				KEY_COLUMN_USAGE.REFERENCED_TABLE_NAME AS ref_table,
+				KEY_COLUMN_USAGE.REFERENCED_COLUMN_NAME AS ref_column,
+				REFERENTIAL_CONSTRAINTS.UPDATE_RULE AS on_update,
+				REFERENTIAL_CONSTRAINTS.DELETE_RULE AS on_delete
+			FROM information_schema.REFERENTIAL_CONSTRAINTS
+			JOIN information_schema.KEY_COLUMN_USAGE USING (CONSTRAINT_NAME)
+			WHERE KEY_COLUMN_USAGE.TABLE_SCHEMA = %s
+			AND KEY_COLUMN_USAGE.TABLE_NAME = %s
+			AND KEY_COLUMN_USAGE.ORDINAL_POSITION = 1
+			ORDER BY REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME
+		", $schema, $table)->fetchAll();
+	}
+
+
+	private function getIndexesWithColumns(string $schema, string $table): array
+	{
+		return $this->dbal->query("
+			SELECT 
+			    INDEX_NAME AS name,
+			    TABLE_SCHEMA AS `schema`,
+			    TABLE_NAME AS `table`,
+			    COLUMN_NAME AS `column`,
+				INDEX_TYPE AS `type`
+			FROM information_schema.STATISTICS
+			WHERE TABLE_SCHEMA = %s
+			AND TABLE_NAME = %s
+			AND NON_UNIQUE = 1
+			ORDER BY INDEX_NAME
+		", $schema, $table)->fetchAll();
+	}
+
+
+	private function getKeyColumns(string $key, string $schema, string $table): array
+	{
+		return $this->dbal->query("
+			SELECT COLUMN_NAME AS `column`
+			FROM information_schema.KEY_COLUMN_USAGE
+			WHERE CONSTRAINT_NAME = %s
+			AND TABLE_SCHEMA = %s
+			AND TABLE_NAME = %s
+			ORDER BY COLUMN_NAME
+		", $key, $schema, $table)->fetchPairs(null, 'column');
+	}
+
+
+	private function getDefault(mixed $default, string $type): mixed
+	{
+		if ($default) {
+			preg_match("/\'(.*)\'/", $default, $m);
+			$default = $m[1] ?? $default;
+		}
+		return match($default) {
+			'current_timestamp()' => "now",
+			default => match($type) {
+				'bool' => match ($default) {
+					'1' => true,
+					'0' => false,
+					default => null,
+				},
+				'int' => $default === 'NULL' || $default === null ? null : (int) $default,
+				'bigint' => $default === 'NULL' || $default === null ? null : (int) $default,
+				'float' => $default === 'NULL' || $default === null ? null : (int) $default,
+				default => $default === 'NULL' ? null : $default,
+			}
+		};
 	}
 
 
@@ -219,7 +238,12 @@ class MysqlAnalyzer implements Analyzer
 			'text' => 'text',
 			'timestamp' => 'datetime',
 			'float' => 'float',
-//			'text' => 'fulltext',
 		};
+	}
+
+
+	private function getRestriction(string $restriction): string
+	{
+		return str_replace('no action', 'restrict', strtolower($restriction));
 	}
 }

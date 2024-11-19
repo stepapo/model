@@ -38,6 +38,7 @@ class PgsqlProcessor implements DbProcessor
 
 
 	public function __construct(
+		private array $schemas,
 		private Connection $dbal,
 		private Collector $collector,
 		private Comparator $comparator,
@@ -55,12 +56,14 @@ class PgsqlProcessor implements DbProcessor
 		$this->printer->printSeparator();
 		foreach ($_SERVER['argv'] as $arg) {
 			if ($arg === '--reset') {
-				$this->dbal->query("DROP SCHEMA IF EXISTS \"public\" CASCADE");
-				$this->dbal->query("CREATE SCHEMA \"public\"");
+				foreach ($this->schemas as $schema) {
+					$this->dbal->query("DROP SCHEMA IF EXISTS %table CASCADE", $schema);
+					$this->dbal->query("CREATE SCHEMA %table", $schema);
+				}
 			}
 		}
 		$this->definition = $this->collector->getDefinition($folders);
-		$this->oldDefinition = $this->analyzer->getDefinition();
+		$this->oldDefinition = $this->analyzer->getDefinition($this->schemas);
 		$this->prepare();
 		$count = 0;
 		try {
@@ -91,7 +94,7 @@ class PgsqlProcessor implements DbProcessor
 			$this->printer->printError();
 			$this->printer->printSeparator();
 			$end = microtime(true);
-			$this->printer->printLine(sprintf("%d queries | %0.3f s | ERROR in query '%s'", $count, $end - $start, $query), 'red');
+			$this->printer->printLine(sprintf("%d queries | %0.3f s | ERROR in query '%s'", $count, $end - $start, $query->sql), 'red');
 			$this->printer->printLine($e->getMessage());
 			$this->printer->printLine($e->getTraceAsString());
 		}
@@ -155,12 +158,6 @@ class PgsqlProcessor implements DbProcessor
 				'update' => $this->updatePrimary($schema, $table),
 			})();
 			return;
-		}
-		if (isset($setup['columns'])) {
-			foreach ($setup['columns'] as $columnName) {
-				$column = $table->columns[$columnName] ?? $this->oldDefinition->schemas[$schema->name]->tables[$table->name]->columns[$columnName];
-				$this->processColumn($type, $schema, $table, $column);
-			}
 		}
 		if (isset($setup['columns'])) {
 			foreach ($setup['columns'] as $columnName) {

@@ -13,6 +13,11 @@ use Stepapo\Utils\Service;
 
 class Collector implements Service
 {
+	public function __construct(
+		private array $parameters,
+	) {}
+
+
 	public function getDefinition(array $folders): Definition
 	{
 		$files = [];
@@ -23,7 +28,7 @@ class Collector implements Service
 		$definitions = [];
 		/** @var FileInfo $file */
 		foreach ($files as $file) {
-			$definitions[] = Definition::createFromNeon($file->getPathname());
+			$definitions[] = Definition::createFromNeon($file->getPathname(), $this->parameters);
 		}
 		return $this->mergeDefinitions($definitions);
 	}

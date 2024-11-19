@@ -23,6 +23,7 @@ class ModelExtension extends StepapoExtension
 			'testMode' => Expect::bool()->default(false),
 			'driver' => Expect::string()->required(),
 			'database' => Expect::string()->required(),
+			'schemas' => Expect::arrayOf('string'),
 		]);
 	}
 
@@ -34,12 +35,16 @@ class ModelExtension extends StepapoExtension
 		$builder->addDefinition($this->prefix('definition.analyzer'))
 			->setFactory($this->config->driver === 'pgsql' ? PgsqlAnalyzer::class : MysqlAnalyzer::class);
 		$processor = $builder->addDefinition($this->prefix('definition.processor'))
-			->setFactory($this->config->driver === 'pgsql' ? PgsqlProcessor::class : MysqlProcessor::class);
+			->setFactory($this->config->driver === 'pgsql' ? PgsqlProcessor::class : MysqlProcessor::class, [$this->config->schemas ?: ($this->config->driver === 'pgsql' ? ['public'] : [$this->config->database])]);
 		if ($this->config->driver === 'mysql') {
 			$processor->addSetup('setDefaultSchema', [$this->config->database]);
 		}
 		$builder->addDefinition($this->prefix('manipulation.collector'))
 			->setFactory(Collector::class, [$this->config->parameters, $builder->parameters['debugMode'], $this->config->testMode]);
+		$builder->addDefinition($this->prefix('definition.collector'))
+			->setFactory(\Stepapo\Model\Definition\Collector::class, [
+				['defaultSchema' => $this->config->driver === 'mysql' ? $this->config->database : 'public'],
+			]);
 		parent::loadConfiguration();
 	}
 }

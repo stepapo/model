@@ -13,7 +13,7 @@ class Foreign extends Schematic
 {
 	public ?string $name = null;
 	#[KeyProperty] public string $keyColumn;
-	public ?string $schema = 'public';
+	public ?string $schema = null;
 	public string $table;
 	public string $column;
 	public string $onDelete = 'cascade';

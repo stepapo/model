@@ -10,6 +10,15 @@ class Comparator implements Service
 {
 	public function compare(Definition $new, Definition $old): array
 	{
+		foreach ($new->schemas as $schema) {
+			foreach ($schema->tables as $table) {
+				foreach ($table->foreignKeys as $foreignKey) {
+					if ($foreignKey->schema === null) {
+						$foreignKey->schema = $schema->name;
+					}
+				}
+			}
+		}
 		$result = [];
 		foreach ($new->schemas as $schema) {
 			if (!isset($old->schemas[$schema->name])) {

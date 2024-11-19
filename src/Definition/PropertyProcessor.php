@@ -16,10 +16,11 @@ class PropertyProcessor
 
 
 	public function __construct(
+		private array $parameters,
 		private Generator $generator,
 	) {
 		$this->printer = new Printer;
-		$this->collector = new Collector;
+		$this->collector = new Collector($parameters);
 	}
 
 
