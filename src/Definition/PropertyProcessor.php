@@ -47,7 +47,7 @@ class PropertyProcessor
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$commentsBefore[$table->name] = $this->generator->getEntityComments($table);
+					$commentsBefore[$table->name] = $this->generator->getEntityComments($table, $table->module);
 				}
 			}
 			# GENERATING SIMPLE PROPERTIES
@@ -56,7 +56,7 @@ class PropertyProcessor
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$this->generator->updateEntity($table);
+					$this->generator->updateEntity($table, $table->module);
 				}
 			}
 			# GENERATING 1:M PROPERTIES
@@ -67,7 +67,7 @@ class PropertyProcessor
 					}
 					foreach ($table->foreignKeys as $foreignKey) {
 						if ($foreignKey->reverseName) {
-							$this->generator->updateEntityOneHasMany($table, $foreignKey);
+							$this->generator->updateEntityOneHasMany($table, $foreignKey, $table->module);
 						}
 					}
 				}
@@ -78,9 +78,9 @@ class PropertyProcessor
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						$from = Arrays::first($table->foreignKeys);
 						$to = Arrays::last($table->foreignKeys);
-						$this->generator->updateEntityManyHasMany($from, $to, true);
+						$this->generator->updateEntityManyHasMany($from, $to, true, $table->module);
 						if ($to->reverseName) {
-							$this->generator->updateEntityManyHasMany($to, $from);
+							$this->generator->updateEntityManyHasMany($to, $from, false, $table->module);
 						}
 					}
 				}
@@ -91,7 +91,7 @@ class PropertyProcessor
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$this->generator->updateEntitySortComments($table);
+					$this->generator->updateEntitySortComments($table, $table->module);
 				}
 			}
 			# GETTING UPDATED COMMENTS
@@ -101,7 +101,7 @@ class PropertyProcessor
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						continue;
 					}
-					$commentsAfter[$table->name] = $this->generator->getEntityComments($table);
+					$commentsAfter[$table->name] = $this->generator->getEntityComments($table, $table->module);
 				}
 			}
 			# CHECKING FOR CHANGES

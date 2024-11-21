@@ -15,6 +15,7 @@ class Table extends Schematic
 {
 	public string $type = 'create';
 	#[KeyProperty] public string $name;
+	public ?string $module = null;
 	/** @var Column[] */ #[ArrayOfType(Column::class)] public array $columns = [];
 	#[Type(Primary::class)] public Primary|array|string|null $primaryKey = null;
 	/** @var Unique[] */ #[ArrayOfType(Unique::class)] public array $uniqueKeys = [];
