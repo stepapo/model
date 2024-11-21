@@ -121,7 +121,7 @@ class EntityProcessor
 		} elseif ($this->data->$name instanceof Item) {
 			$related = null;
 			if (method_exists($relatedRepository, 'getByData')) {
-				$related = $relatedRepository->getByData($this->data->$name);
+				$related = $relatedRepository->getByData($this->data->$name, $this->entity);
 			}
 			if (!$related) {
 				$related = $relatedRepository->createFromData($this->data->$name, person: $this->person, date: $this->date);
