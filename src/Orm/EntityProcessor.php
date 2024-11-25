@@ -51,7 +51,7 @@ class EntityProcessor
 				continue;
 			}
 			$property = $metadata->hasProperty($name) ? $metadata->getProperty($name) : null;
-			if (!$property || $property->isPrimary) {
+			if (!$property || (!isset($this->data->$name) && $property->isPrimary)) {
 				continue;
 			} elseif (!$property->wrapper || $property->wrapper === DateTimeImmutable::class) {
 				$this->processScalar($property);
