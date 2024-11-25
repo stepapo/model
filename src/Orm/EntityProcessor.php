@@ -19,6 +19,7 @@ use Nextras\Orm\Relationships\OneHasOne;
 use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
+use Tracy\Dumper;
 
 
 class EntityProcessor
@@ -115,8 +116,8 @@ class EntityProcessor
 			$value = $this->data->$name instanceof FileData
 				? $relatedRepository->getById($this->data->id)
 				: (
-					$this->model->getRepository(FileRepository::class)->createFile($this->data->$name, $this->person, $name === 'iconFile')
-						?: $this->entity->$name
+				$this->model->getRepository(FileRepository::class)->createFile($this->data->$name, $this->person, $name === 'iconFile')
+					?: $this->entity->$name
 				);
 		} elseif ($this->data->$name instanceof Item) {
 			$related = null;
@@ -148,7 +149,7 @@ class EntityProcessor
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
 		$array = [];
 		foreach ((array) $this->data->$name as $item) {
-			if (isset($property->types[File::class])) {
+			if ($property->relationship->entity === File::class) {
 				$array[] = $this->model->getRepository(FileRepository::class)->createFile($item, $this->person);
 			} elseif (is_numeric($item)) {
 				if ($item = $relatedRepository->getById($item)) {
@@ -181,14 +182,23 @@ class EntityProcessor
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
 		foreach ((array) $this->data->$name as $relatedData) {
-			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
-			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model);
-			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
-			if (!$this->isModified) {
-				$this->isModified = $processor->isModified;
+			if ($property->relationship->entity === File::class) {
+				$entity = $this->model->getRepository(FileRepository::class)->createFile($relatedData, $this->person);
+				$ids[] = $entity->getPersistedId();
+				if (!$this->entity->$name->has($entity)) {
+					$this->entity->$name->add($entity);
+					$this->model->persist($entity);
+				}
+			} else {
+				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
+				$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
+				$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model);
+				$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
+				if (!$this->isModified) {
+					$this->isModified = $processor->isModified;
+				}
+				$ids[] = $relatedEntity->getPersistedId();
 			}
-			$ids[] = $relatedEntity->getPersistedId();
 		}
 		if (!$this->skipDefaults) {
 			foreach ($this->entity->$name as $related) {
