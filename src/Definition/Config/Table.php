@@ -17,7 +17,7 @@ class Table extends Schematic
 	#[KeyProperty] public string $name;
 	public ?string $module = null;
 	/** @var Column[] */ #[ArrayOfType(Column::class)] public array $columns = [];
-	#[Type(Primary::class)] public Primary|array|string|null $primaryKey = null;
+	#[Type(Primary::class)] public ?Primary $primaryKey = null;
 	/** @var Unique[] */ #[ArrayOfType(Unique::class)] public array $uniqueKeys = [];
 	/** @var Index[] */ #[ArrayOfType(Index::class)] public array $indexes = [];
 	/** @var Foreign[] */ #[ArrayOfType(Foreign::class)] public array $foreignKeys = [];

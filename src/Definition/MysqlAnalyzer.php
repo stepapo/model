@@ -14,7 +14,6 @@ use Stepapo\Model\Definition\Config\Primary;
 use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
-use Tracy\Dumper;
 
 
 class MysqlAnalyzer implements Analyzer

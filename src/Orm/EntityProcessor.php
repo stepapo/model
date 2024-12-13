@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Orm;
 
-use App\Model\File\File;
 use App\Model\File\FileData;
 use App\Model\File\FileRepository;
 use App\Model\Person\Person;
@@ -19,7 +18,6 @@ use Nextras\Orm\Relationships\OneHasOne;
 use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
-use Tracy\Dumper;
 
 
 class EntityProcessor
@@ -47,7 +45,7 @@ class EntityProcessor
 			}
 		}
 		foreach ($this->data as $name => $value) {
-			if (in_array($name, ['createdAt', 'updatedAt', 'createdByPerson', 'updatedByPerson'], true)) {
+			if (in_array($name, ['createdAt', 'updatedAt', 'createdByPerson', 'updatedByPerson', $parentName], true)) {
 				continue;
 			}
 			$property = $metadata->hasProperty($name) ? $metadata->getProperty($name) : null;
@@ -102,8 +100,14 @@ class EntityProcessor
 	{
 		$name = $property->name;
 		$value = $this->data->$name;
-		if ((empty($this->entity->$name) && !empty($value)) || $this->entity->$name !== $value) {
-			$this->entity->$name = $value;
+		if ($property->wrapper === DateTimeImmutable::class) {
+			if ((empty($this->entity->$name) && !empty($value)) || $this->entity->$name !== $value) {
+				$this->entity->$name = $value;
+			}
+		} else {
+			if ((empty($this->entity->$name) && !empty($value)) || $this->entity->$name != $value) {
+				$this->entity->$name = $value;
+			}
 		}
 	}
 
@@ -112,22 +116,19 @@ class EntityProcessor
 	{
 		$name = $property->name;
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
-		if (isset($property->types[File::class])) {
-			$value = $this->data->$name instanceof FileData
-				? $relatedRepository->getById($this->data->id)
-				: (
-				$this->model->getRepository(FileRepository::class)->createFile($this->data->$name, $this->person, $name === 'iconFile')
-					?: $this->entity->$name
-				);
-		} elseif ($this->data->$name instanceof Item) {
-			$related = null;
-			if (method_exists($relatedRepository, 'getByData')) {
-				$related = $relatedRepository->getByData($this->data->$name, $this->entity);
+		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
+		if ($this->data->$name instanceof Item) {
+			if ($this->data->$name instanceof FileData) {
+				$this->data->$name = $this->model->getRepository(FileRepository::class)->createFileData($this->data->$name);
 			}
-			if (!$related) {
-				$related = $relatedRepository->createFromData($this->data->$name, person: $this->person, date: $this->date);
+			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name, $this->entity) : null;
+			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
+			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model);
+			$processor->processEntity();
+			if (!$this->isModified) {
+				$this->isModified = $processor->isModified;
 			}
-			$value = $related;
+			$value = $relatedEntity;
 		} elseif (is_numeric($this->data->$name)) {
 			$value = $this->data->$name ? $relatedRepository->getById($this->data->$name) : null;
 		} elseif (method_exists($relatedRepository, 'getByData')) {
@@ -137,7 +138,10 @@ class EntityProcessor
 			}
 			$value = $related;
 		}
-		if (isset($value) && (!isset($this->entity->$name) || $this->entity->$name !== $value)) {
+		if (
+			(isset($value) && (!isset($this->entity->$name) || $this->entity->$name !== $value))
+			|| ($value === null && $this->entity->$name !== null && !$this->entity instanceof PostProcessable)
+		) {
 			$this->entity->$name = $value;
 		}
 	}
@@ -149,9 +153,7 @@ class EntityProcessor
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
 		$array = [];
 		foreach ((array) $this->data->$name as $item) {
-			if ($property->relationship->entity === File::class) {
-				$array[] = $this->model->getRepository(FileRepository::class)->createFile($item, $this->person);
-			} elseif (is_numeric($item)) {
+			if (is_numeric($item)) {
 				if ($item = $relatedRepository->getById($item)) {
 					$array[] = $item;
 				}
@@ -181,24 +183,25 @@ class EntityProcessor
 		$ids = [];
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
-		foreach ((array) $this->data->$name as $relatedData) {
-			if ($property->relationship->entity === File::class) {
-				$entity = $this->model->getRepository(FileRepository::class)->createFile($relatedData, $this->person);
-				$ids[] = $entity->getPersistedId();
-				if (!$this->entity->$name->has($entity)) {
-					$this->entity->$name->add($entity);
-					$this->model->persist($entity);
+		foreach ((array) $this->data->$name as $key => $relatedData) {
+			if ($relatedData instanceof FileData) {
+				$relatedData = $this->model->getRepository(FileRepository::class)->createFileData($relatedData, !is_numeric($key) ? $key : null);
+				if (!$relatedData) {
+					continue;
 				}
-			} else {
-				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
-				$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-				$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model);
-				$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
-				if (!$this->isModified) {
-					$this->isModified = $processor->isModified;
-				}
-				$ids[] = $relatedEntity->getPersistedId();
 			}
+//			if (is_numeric($key)) {
+//				$relatedOriginal = $relatedRepository->getById($key);
+//			} else {
+				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
+//			}
+			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
+			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model);
+			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
+			if (!$this->isModified) {
+				$this->isModified = $processor->isModified;
+			}
+			$ids[] = $relatedEntity->getPersistedId();
 		}
 		if (!$this->skipDefaults) {
 			foreach ($this->entity->$name as $related) {

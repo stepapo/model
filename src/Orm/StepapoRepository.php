@@ -6,6 +6,8 @@ namespace Stepapo\Model\Orm;
 
 use App\Model\Person\Person;
 use DateTimeInterface;
+use Nette\Utils\Strings;
+use Nextras\Orm\Entity\Entity;
 use Nextras\Orm\Repository\Repository;
 use ReflectionClass;
 use ReflectionException;
@@ -60,5 +62,19 @@ abstract class StepapoRepository extends Repository
 		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel());
 		$processor->processEntity($parent, $parentName);
 		return $entity;
+	}
+
+
+	public function createSlug(string $title, ?Entity $entity = null, string $separator = '-', int $num = 1): string
+	{
+		$slug = Strings::webalize($title) . ($num > 1 ? '-' . $num : '');
+		$filter = ['slug' => $slug];
+		if ($entity) {
+			$filter['id!='] = $entity->getPersistedId();
+		}
+		if ($this->getBy($filter)) {
+			return $this->createSlug($title, $entity, $separator, $num + 1);
+		}
+		return $separator === '-' ? $slug : str_replace('-', $separator, $slug);
 	}
 }

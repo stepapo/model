@@ -31,7 +31,7 @@ abstract class StepapoEntity extends Entity
 	public function getData(bool $neon = false): Item
 	{
 		if (!method_exists($this, 'getDataClass')) {
-			throw new NotSupportedException;
+			throw new NotSupportedException('Entity does not have data class defined.');
 		}
 		$class = new ReflectionClass($this->getDataClass());
 		$data = $class->newInstance();
@@ -49,7 +49,15 @@ abstract class StepapoEntity extends Entity
 				$data->$name = $this->shouldGetData($p) ? $this->$name?->getData($neon) : $this->$name?->getPersistedId();
 			} elseif ($property->wrapper === OneHasMany::class) {
 				foreach ($this->$name as $related) {
-					$data->$name[$related->getPersistedId()] = $related->getData($neon);
+					$relatedData = $related->getData($neon);
+					$keyProperty = $relatedData::getKeyProperty();
+					if ($keyProperty && $related->$keyProperty instanceof StepapoEntity) {
+						$id = $related->$keyProperty->getPersistedId();
+					} else {
+						$id = $related->getPersistedId();
+					}
+					$data->$name[$id] = $related->getData($neon);
+//					$data->$name[$keyProperty ? $relatedData->$keyProperty : $related->getPersistedId()] = $related->getData($neon);
 				}
 			} elseif ($property->wrapper === ManyHasMany::class) {
 				foreach ($this->$name as $related) {
