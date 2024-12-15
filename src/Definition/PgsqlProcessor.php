@@ -248,7 +248,6 @@ class PgsqlProcessor implements DbProcessor
 
 	private function alterSequence(Schema $schema, Table $table, Column $column): void
 	{
-		$this->removeSequence($schema, $table);
 		$this->addQuery(new Query(
 			'alterSequence',
 			"ALTER SEQUENCE \"{$table->name}_id_seq\" OWNED BY \"{$table->name}\".\"{$column->name}\"",
