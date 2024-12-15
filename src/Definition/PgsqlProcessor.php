@@ -33,6 +33,7 @@ class PgsqlProcessor implements DbProcessor
 		'dropIndex' => [],
 		'alterTableDrop' => [],
 		'alterTable' => [],
+		'alterSequence' => [],
 		'createIndex' => [],
 	];
 
@@ -245,6 +246,16 @@ class PgsqlProcessor implements DbProcessor
 	}
 
 
+	private function alterSequence(Schema $schema, Table $table, Column $column): void
+	{
+		$this->removeSequence($schema, $table);
+		$this->addQuery(new Query(
+			'alterSequence',
+			"ALTER SEQUENCE \"{$table->name}_id_seq\" OWNED BY \"{$table->name}\".\"{$column->name}\"",
+		));
+	}
+
+
 	private function removeSequence(Schema $schema, Table $table): void
 	{
 		$this->addQuery(new Query(
@@ -383,6 +394,7 @@ class PgsqlProcessor implements DbProcessor
 		}
 		if ($column->auto) {
 			$this->createSequence($schema, $table);
+			$this->alterSequence($schema, $table, $column);
 		}
 		$this->addQuery(new Query(
 			'alterTable',
@@ -409,6 +421,7 @@ class PgsqlProcessor implements DbProcessor
 	{
 		if ($column->auto) {
 			$this->createSequence($schema, $table);
+			$this->alterSequence($schema, $table, $column);
 		}
 		$this->addQuery(new Query(
 			'alterTable',
@@ -495,6 +508,7 @@ class PgsqlProcessor implements DbProcessor
 		}
 		if ($column->auto) {
 			$this->createSequence($schema, $table);
+			$this->alterSequence($schema, $table, $column);
 			$c['auto'] = "DEFAULT nextval('{$table->name}_id_seq'::regclass)";
 		}
 		return implode(' ', $c);
