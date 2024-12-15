@@ -6,10 +6,10 @@ namespace Stepapo\Model\Definition\Config;
 
 use Stepapo\Utils\Attribute\ToArray;
 use Stepapo\Utils\Attribute\ValueProperty;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Primary extends Schematic
+class Primary extends Config
 {
 	/** @var string[] */ #[ValueProperty, ToArray] public array $columns;
 }

@@ -7,10 +7,10 @@ namespace Stepapo\Model\Manipulation\Config;
 use Nette\InvalidArgumentException;
 use Nette\Schema\ValidationException;
 use Stepapo\Model\Data\Item;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Manipulation extends Schematic
+class Manipulation extends Config
 {
 	public string $class;
 	public array $modes = ['prod', 'dev', 'test'];

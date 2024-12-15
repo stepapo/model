@@ -7,10 +7,10 @@ namespace Stepapo\Model\Definition\Config;
 use Stepapo\Utils\Attribute\KeyProperty;
 use Stepapo\Utils\Attribute\ToArray;
 use Stepapo\Utils\Attribute\ValueProperty;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Index extends Schematic
+class Index extends Config
 {
 	#[KeyProperty] public string|int|null $name = null;
 	/** @var string[] */ #[ValueProperty, ToArray] public array $columns;

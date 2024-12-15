@@ -7,10 +7,10 @@ namespace Stepapo\Model\Data;
 use InvalidArgumentException;
 use ReflectionClass;
 use Stepapo\Utils\ReflectionHelper;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Item extends Schematic
+class Item extends Config
 {
 	/**
 	 * @throws \ReflectionException

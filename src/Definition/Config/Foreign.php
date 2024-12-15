@@ -6,10 +6,10 @@ namespace Stepapo\Model\Definition\Config;
 
 use Nextras\Orm\StorageReflection\StringHelper;
 use Stepapo\Utils\Attribute\KeyProperty;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Foreign extends Schematic
+class Foreign extends Config
 {
 	public ?string $name = null;
 	#[KeyProperty] public string $keyColumn;

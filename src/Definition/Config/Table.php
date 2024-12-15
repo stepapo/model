@@ -8,10 +8,10 @@ use Nextras\Orm\StorageReflection\StringHelper;
 use Stepapo\Utils\Attribute\ArrayOfType;
 use Stepapo\Utils\Attribute\KeyProperty;
 use Stepapo\Utils\Attribute\Type;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Table extends Schematic
+class Table extends Config
 {
 	public string $type = 'create';
 	#[KeyProperty] public string $name;

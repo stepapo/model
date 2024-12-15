@@ -6,10 +6,10 @@ namespace Stepapo\Model\Definition\Config;
 
 use Stepapo\Utils\Attribute\ArrayOfType;
 use Stepapo\Utils\Attribute\KeyProperty;
-use Stepapo\Utils\Schematic;
+use Stepapo\Utils\Config;
 
 
-class Schema extends Schematic
+class Schema extends Config
 {
 	#[KeyProperty] public string $name;
 	/** @var Table[]|array */ #[ArrayOfType(Table::class)] public array $tables = [];
