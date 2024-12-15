@@ -20,7 +20,7 @@
 		"nextras/dbal": "^5.0",
 		"nextras/orm": "^5.0",
 		"stepapo/generator": "dev-main",
-		"stepapo/utils": "^1.0"
+		"stepapo/utils": "dev-main"
 	},
 	"autoload": {
 		"psr-4": {
