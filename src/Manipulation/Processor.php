@@ -3,6 +3,7 @@
 namespace Stepapo\Model\Manipulation;
 
 use App\Model\Orm;
+use Nextras\Dbal\Platforms\Data\Fqn;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Utils\Printer;
@@ -48,7 +49,7 @@ class Processor implements Service
 									if (!$entity->getData()->isSameAs($item)) {
 										$isModified = $repository->createFromDataReturnBool($item, $entity);
 										if ($isModified) {
-											$this->printer->printText($repository->getMapper()->getTableName(), 'white');
+											$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 											$this->printer->printText(': updating item ');
 											$this->printer->printText($itemName, 'white');
 											if (method_exists($repository, 'postProcessFromData')) {
@@ -59,7 +60,7 @@ class Processor implements Service
 										}
 									}
 								} else {
-									$this->printer->printText($repository->getMapper()->getTableName(), 'white');
+									$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 									$this->printer->printText(': creating item ');
 									$this->printer->printText($itemName, 'white');
 									$entity = $repository->createFromData($item);

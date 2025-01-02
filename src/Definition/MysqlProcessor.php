@@ -15,6 +15,7 @@ use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
 use Stepapo\Utils\Printer;
+use Tracy\Dumper;
 
 
 class MysqlProcessor implements DbProcessor
@@ -25,15 +26,16 @@ class MysqlProcessor implements DbProcessor
 	private Printer $printer;
 	private array $steps = [
 		'createSchema' => [],
-		'dropSchema' => [],
-		'dropSequence' => [],
 		'createSequence' => [],
 		'createTable' => [],
-		'dropTable' => [],
-		'dropIndex' => [],
-		'alterTableDrop' => [],
 		'alterTable' => [],
+		'alterSequence' => [],
 		'createIndex' => [],
+		'alterTableDrop' => [],
+		'dropSchema' => [],
+		'dropTable' => [],
+		'dropSequence' => [],
+		'dropIndex' => [],
 	];
 
 
