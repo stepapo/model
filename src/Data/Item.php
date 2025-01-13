@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Data;
 
+use App\Model\Text\TextData;
 use InvalidArgumentException;
 use ReflectionClass;
 use Stepapo\Utils\ReflectionHelper;

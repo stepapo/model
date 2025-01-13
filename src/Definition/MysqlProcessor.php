@@ -28,10 +28,11 @@ class MysqlProcessor implements DbProcessor
 		'createSchema' => [],
 		'createSequence' => [],
 		'createTable' => [],
+		'alterTable' => [],
 		'alterSequence' => [],
 		'createIndex' => [],
 		'alterTableDrop' => [],
-		'alterTable' => [],
+		'alterTableAdd' => [],
 		'dropSchema' => [],
 		'dropTable' => [],
 		'dropSequence' => [],
@@ -407,7 +408,7 @@ class MysqlProcessor implements DbProcessor
 	private function createUnique(Schema $schema, Table $table, Unique $unique): void
 	{
 		$this->addQuery(new Query(
-			'alterTable',
+			'alterTableAdd',
 			"ALTER TABLE `$schema->name`.`$table->name` ADD " . $this->unique($unique),
 			"$schema->name.$table->name",
 			'creating unique key',
@@ -438,7 +439,7 @@ class MysqlProcessor implements DbProcessor
 	private function createForeign(Schema $schema, Table $table, Foreign $foreignKey): void
 	{
 		$this->addQuery(new Query(
-			'alterTable',
+			'alterTableAdd',
 			"ALTER TABLE `$schema->name`.`$table->name` ADD CONSTRAINT " . $this->foreign($foreignKey),
 			"$schema->name.$table->name",
 			'creating foreign key',

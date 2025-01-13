@@ -28,14 +28,21 @@ abstract class Repository
 	}
 
 
+	/** @return Collection<Item> */
+	public function findByIds(array $ids): Collection
+	{
+		return $this->getCollection()->findByIds($ids);
+	}
+
+
 	public function getById(mixed $id): ?Item
 	{
 		return $this->getCollection()->getById($id);
 	}
 
 
-	public function getBy(array $conds): ?Item
-	{
-		return $this->getCollection()->getBy($conds);
-	}
+//	public function getBy(array $conds): ?Item
+//	{
+//		return $this->getCollection()->getBy($conds);
+//	}
 }

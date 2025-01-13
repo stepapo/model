@@ -101,11 +101,11 @@ class EntityProcessor
 		$name = $property->name;
 		$value = $this->data->$name;
 		if ($property->wrapper === DateTimeImmutable::class) {
-			if ((empty($this->entity->$name) && !empty($value)) || $this->entity->$name !== $value) {
+			if ((empty($this->entity->$name) && (!empty($value) || $value === '0')) || $this->entity->$name != $value) {
 				$this->entity->$name = $value;
 			}
 		} else {
-			if ((empty($this->entity->$name) && !empty($value)) || $this->entity->$name != $value) {
+			if ((empty($this->entity->$name) && (!empty($value) || $value === '0')) || $this->entity->$name !== $value) {
 				$this->entity->$name = $value;
 			}
 		}

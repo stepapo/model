@@ -16,6 +16,19 @@ class Collection extends ArrayObject
 	}
 
 
+	/** @return Collection<Item> */
+	public function findByIds(array $ids): Collection
+	{
+		$array = [];
+		foreach ($ids as $id) {
+			if ($item = $this->getById($id)) {
+				$array[$id] = $item;
+			}
+		}
+		return new Collection($array);
+	}
+
+
 	public function findBy(array $conds): Collection
 	{
 		return new Collection(array_filter(
@@ -54,8 +67,8 @@ class Collection extends ArrayObject
 	}
 
 
-	public function getBy(array $conds): ?Item
-	{
-		return current((array) $this->findBy($conds)) ?: null;
-	}
+//	public function getBy(array $conds): ?Item
+//	{
+//		return current((array) $this->findBy($conds)) ?: null;
+//	}
 }
