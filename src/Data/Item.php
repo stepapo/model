@@ -13,9 +13,7 @@ use Stepapo\Utils\Config;
 
 class Item extends Config
 {
-	/**
-	 * @throws \ReflectionException
-	 */
+	/** @throws \ReflectionException */
 	public function getCollection(string $name): Collection
 	{
 		$rf = new ReflectionClass($this);
@@ -27,9 +25,7 @@ class Item extends Config
 	}
 
 
-	/**
-	 * @throws \ReflectionException
-	 */
+	/** @throws \ReflectionException */
 	public function isCollection(string $name): bool
 	{
 		$rf = new ReflectionClass($this);

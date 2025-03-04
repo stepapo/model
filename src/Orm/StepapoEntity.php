@@ -15,20 +15,16 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
 use Stepapo\Model\Data\Item;
+use Stepapo\Utils\Attribute\DontCache;
+use Stepapo\Utils\Injectable;
 
 
-abstract class StepapoEntity extends Entity
+abstract class StepapoEntity extends Entity implements Injectable
 {
-	protected function getOmittedProperties(): array
-	{
-		return [];
-	}
-
-
 	/**
 	 * @throws ReflectionException
 	 */
-	public function getData(bool $neon = false): Item
+	public function getData(bool $neon = false, bool $forCache = false): Item
 	{
 		if (!method_exists($this, 'getDataClass')) {
 			throw new NotSupportedException('Entity does not have data class defined.');
@@ -37,27 +33,29 @@ abstract class StepapoEntity extends Entity
 		$data = $class->newInstance();
 		foreach ($class->getProperties() as $p) {
 			$name = $p->name;
-			if ($neon && in_array($name, $this->getOmittedProperties(), true)) {
-				continue;
-			}
+//			if ($neon && in_array($name, $this->getOmittedProperties(), true)) {
+//				continue;
+//			}
 			$property = $this->getMetadata()->hasProperty($name) ? $this->getMetadata()->getProperty($name) : null;
 			if (!$property) {
+				continue;
+			} elseif ($forCache && $p->getAttributes(DontCache::class)) {
 				continue;
 			} elseif (!$property->wrapper) {
 				$data->$name = $this->$name;
 			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
-				$data->$name = $this->shouldGetData($p) ? $this->$name?->getData($neon) : $this->$name?->getPersistedId();
+				$data->$name = $this->shouldGetData($p) ? $this->$name?->getData($neon, $forCache) : $this->$name?->getPersistedId();
 			} elseif ($property->wrapper === OneHasMany::class) {
 				foreach ($this->$name as $related) {
-					$relatedData = $related->getData($neon);
+					$relatedData = $related->getData($neon, $forCache);
 					$keyProperty = $relatedData::getKeyProperty();
 					if ($keyProperty && $related->$keyProperty instanceof StepapoEntity) {
 						$id = $related->$keyProperty->getPersistedId();
 					} else {
 						$id = $related->getPersistedId();
 					}
-					$data->$name[$id] = $related->getData($neon);
-//					$data->$name[$keyProperty ? $relatedData->$keyProperty : $related->getPersistedId()] = $related->getData($neon);
+					$data->$name[$id] = $related->getData($neon, $forCache);
+//					$data->$name[$keyProperty ? $relatedData->$keyProperty : $related->getPersistedId()] = $related->getData($neon, $forCache);
 				}
 			} elseif ($property->wrapper === ManyHasMany::class) {
 				foreach ($this->$name as $related) {
@@ -66,6 +64,15 @@ abstract class StepapoEntity extends Entity
 			}
 		}
 		return $data;
+	}
+
+
+	public function getTitle(): string
+	{
+		if (!$this->getMetadata()->hasProperty('title')) {
+			throw new NotSupportedException;
+		}
+		return $this->title;
 	}
 
 
