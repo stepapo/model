@@ -93,7 +93,7 @@ class PgsqlAnalyzer implements Analyzer
 //		", 'public')->fetchAll();
 		return $this->dbal->query("
 			SELECT DISTINCT ON (pg_class.relname)
-			    pg_class.oid AS id,
+				pg_class.oid AS id,
 				pg_class.relname::varchar AS name,
 				pg_namespace.nspname::varchar AS schema
 			FROM pg_catalog.pg_class
@@ -136,7 +136,7 @@ class PgsqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT
-			    pg_constraint.conindid AS id,
+				pg_constraint.conindid AS id,
 				pg_constraint.conname::varchar AS name
 			FROM pg_catalog.pg_constraint
 			WHERE pg_constraint.contype = 'u'
@@ -149,7 +149,7 @@ class PgsqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT
-			    pg_constraint.conindid AS id,
+				pg_constraint.conindid AS id,
 				pg_constraint.conname::varchar AS name
 			FROM pg_catalog.pg_constraint
 			WHERE pg_constraint.contype = 'p'

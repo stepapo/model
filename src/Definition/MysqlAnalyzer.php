@@ -92,7 +92,7 @@ class MysqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT 
-			    TABLE_NAME AS name
+				TABLE_NAME AS name
 			FROM information_schema.TABLES
 			WHERE TABLE_SCHEMA = %s 
 			AND TABLE_TYPE = 'BASE TABLE'
@@ -123,7 +123,7 @@ class MysqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT
-			    CONSTRAINT_NAME as name,
+				CONSTRAINT_NAME as name,
 				TABLE_SCHEMA as `schema`,
 				TABLE_NAME as `table`
 			FROM information_schema.TABLE_CONSTRAINTS
@@ -139,7 +139,7 @@ class MysqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT
-			    CONSTRAINT_NAME as name,
+				CONSTRAINT_NAME as name,
 				TABLE_SCHEMA as `schema`,
 				TABLE_NAME as `table`
 			FROM information_schema.TABLE_CONSTRAINTS
@@ -154,7 +154,7 @@ class MysqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT
-			    REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME AS name,
+				REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME AS name,
 				KEY_COLUMN_USAGE.TABLE_SCHEMA AS `schema`,
 				KEY_COLUMN_USAGE.TABLE_NAME AS `table`,
 				KEY_COLUMN_USAGE.COLUMN_NAME AS `column`,
@@ -177,10 +177,10 @@ class MysqlAnalyzer implements Analyzer
 	{
 		return $this->dbal->query("
 			SELECT 
-			    INDEX_NAME AS name,
-			    TABLE_SCHEMA AS `schema`,
-			    TABLE_NAME AS `table`,
-			    COLUMN_NAME AS `column`,
+				INDEX_NAME AS name,
+				TABLE_SCHEMA AS `schema`,
+				TABLE_NAME AS `table`,
+				COLUMN_NAME AS `column`,
 				INDEX_TYPE AS `type`
 			FROM information_schema.STATISTICS
 			WHERE TABLE_SCHEMA = %s
