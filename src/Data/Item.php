@@ -18,18 +18,13 @@ class Item extends Config
 	{
 		$rf = new ReflectionClass($this);
 		$prop = $rf->getProperty($name);
-		if (!property_exists($this, $name) || !$this->isCollection($name)) {
+		if (!property_exists($this, $name) || !ReflectionHelper::propertyHasType($prop, 'array')) {
 			throw new InvalidArgumentException("Property '$name' does not exist or is not a collection.");
 		}
 		return new Collection($prop->isInitialized($this) ? $this->$name : []);
-	}
-
-
-	/** @throws \ReflectionException */
-	public function isCollection(string $name): bool
-	{
-		$rf = new ReflectionClass($this);
-		$prop = $rf->getProperty($name);
-		return ReflectionHelper::propertyHasType($prop, 'array');
+//		if (!property_exists($this, $name)) {
+//			throw new InvalidArgumentException("Property '$name' does not exist or is not a collection.");
+//		}
+//		return new Collection($this->$name ?? []);
 	}
 }

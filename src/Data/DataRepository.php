@@ -10,7 +10,6 @@ use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Repository\IRepository;
 use Stepapo\Utils\Injectable;
 use Stepapo\Utils\Service;
-use Webovac\Core\Lib\ModuleChecker;
 
 
 abstract class DataRepository implements Service, Injectable
