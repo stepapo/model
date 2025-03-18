@@ -82,7 +82,6 @@ abstract class DataRepository implements Service, Injectable
 	/** @return Collection<Item> */
 	public function getCollection(): Collection
 	{
-		bdump(isset($this->collection));
 		if (!isset($this->collection)) {
 			$this->buildCache();
 		}
