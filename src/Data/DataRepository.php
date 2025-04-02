@@ -89,7 +89,7 @@ abstract class DataRepository implements Service, Injectable
 	}
 
 
-	protected function cacheItem(mixed $key, Item $item): void
+	public function cacheItem(mixed $key, Item $item): void
 	{
 		$this->cache->save(
 			lcfirst($this->getName()) . '/' . $key,
