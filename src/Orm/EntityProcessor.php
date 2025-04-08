@@ -140,7 +140,7 @@ class EntityProcessor
 		}
 		if (
 			(isset($value) && (!isset($this->entity->$name) || $this->entity->$name !== $value))
-			|| ($value === null && $this->entity->$name !== null && !$this->entity instanceof PostProcessable)
+			|| ($value === null && $this->entity->$name !== null/* && !$this->entity instanceof PostProcessable*/)
 		) {
 			$this->entity->$name = $value;
 		}
