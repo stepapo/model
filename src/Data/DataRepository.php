@@ -102,14 +102,17 @@ abstract class DataRepository implements Service, Injectable
 	protected function addItemToCollection(mixed $key, ?Item $item = null): void
 	{
 		if (!isset($this->collection) || !array_key_exists($key, (array) $this->collection)) {
-			$item ??= $this->cache->load(lcfirst($this->getName()) . "/$key", function () use ($key) {
+			$item = $this->cache->load(lcfirst($this->getName()) . "/$key");
+			if (!$item) {
 				$this->buildCache();
-				return $this->collection[$key] ?? null;
-			});
+				$item = $this->collection[$key] ?? null;
+			}
 			if (!isset($this->collection)) {
 				$this->collection = new Collection;
 			}
-			$this->collection[$key] = $item;
+			if (!array_key_exists($key, (array) $this->collection)) {
+				$this->collection[$key] = $item;
+			}
 		}
 	}
 }
