@@ -8,6 +8,7 @@ use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Utils\Printer;
 use Stepapo\Utils\Service;
+use Tracy\Dumper;
 
 
 class Processor implements Service
@@ -85,6 +86,7 @@ class Processor implements Service
 				$this->printer->printError();
 				$this->printer->printSeparator();
 				$end = microtime(true);
+				Dumper::dump($item);
 				$this->printer->printLine(sprintf("%d items | %0.3f s | ERROR in item '%s' of repository '%s'", $count, $end - $start, $itemName, $group->name), 'red');
 				$this->printer->printLine($e->getMessage());
 				$this->printer->printLine($e->getTraceAsString());
