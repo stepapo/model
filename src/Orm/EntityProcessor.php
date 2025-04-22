@@ -18,6 +18,7 @@ use Nextras\Orm\Relationships\OneHasOne;
 use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
+use Tracy\Dumper;
 
 
 class EntityProcessor
@@ -121,7 +122,7 @@ class EntityProcessor
 			if ($this->data->$name instanceof FileData) {
 				$this->data->$name = $this->model->getRepository(FileRepository::class)->createFileData($this->data->$name);
 			}
-			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name, $this->entity) : null;
+			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name/*, $this->entity*/) : null;
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
 			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model);
 			$processor->processEntity();
