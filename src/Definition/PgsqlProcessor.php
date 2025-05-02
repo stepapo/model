@@ -260,7 +260,7 @@ class PgsqlProcessor implements DbProcessor
 	{
 		$this->addQuery(new Query(
 			'dropSequence',
-			"DROP SEQUENCE IF EXISTS \"{$table->name}_id_seq\"",
+			"DROP SEQUENCE IF EXISTS \"{$table->name}_id_seq\" CASCADE",
 		));
 	}
 
