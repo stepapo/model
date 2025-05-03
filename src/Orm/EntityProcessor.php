@@ -69,6 +69,9 @@ class EntityProcessor
 			$this->model->persist($this->entity);
 		}
 		foreach ($this->data as $name => $value) {
+			if (in_array($name, ['paths'], true)) {
+				continue;
+			}
 			$property = $metadata->hasProperty($name) ? $metadata->getProperty($name) : null;
 			if (!$property) {
 				continue;
