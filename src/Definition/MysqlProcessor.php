@@ -349,7 +349,7 @@ class MysqlProcessor implements DbProcessor
 	private function createFulltext(Schema $schema, Table $table, Column $column): void
 	{
 		$this->addQuery(new Query(
-			'alterTable',
+			'alterTableAdd',
 			"ALTER TABLE `$schema->name`.`$table->name` ADD FULLTEXT INDEX `{$table->name}_{$column->name}_fx` (`$column->name`)",
 			"$schema->name.$table->name",
 			'creating fulltext',

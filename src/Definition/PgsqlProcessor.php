@@ -412,6 +412,7 @@ class PgsqlProcessor implements DbProcessor
 			'alterTableDrop',
 			"ALTER TABLE \"$schema->name\".\"$table->name\" DROP COLUMN \"$column->name\"",
 			"$schema->name.$table->name",
+			'removing column',
 			$column->name,
 		));
 	}
