@@ -18,6 +18,7 @@ use Nextras\Orm\Relationships\OneHasOne;
 use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
+use Stepapo\Utils\Attribute\SkipInManipulation;
 use Tracy\Dumper;
 
 
@@ -34,6 +35,7 @@ class EntityProcessor
 		private ?DateTimeInterface $date,
 		private bool $skipDefaults,
 		private IModel $model,
+		private bool $fromNeon = false,
 	) {}
 
 
@@ -45,8 +47,13 @@ class EntityProcessor
 				$this->entity->$parentName = $parent;
 			}
 		}
+		$class = new ReflectionClass($this->entity->getDataClass());
 		foreach ($this->data as $name => $value) {
 			if (in_array($name, ['createdAt', 'updatedAt', 'createdByPerson', 'updatedByPerson', $parentName], true)) {
+				continue;
+			}
+			$dataProperty = $class->getProperty($name);
+			if ($this->fromNeon && $dataProperty->getAttributes(SkipInManipulation::class)) {
 				continue;
 			}
 			$property = $metadata->hasProperty($name) ? $metadata->getProperty($name) : null;
@@ -69,7 +76,8 @@ class EntityProcessor
 			$this->model->persist($this->entity);
 		}
 		foreach ($this->data as $name => $value) {
-			if (in_array($name, ['paths'], true)) {
+			$dataProperty = $class->getProperty($name);
+			if ($this->fromNeon && $dataProperty->getAttributes(SkipInManipulation::class)) {
 				continue;
 			}
 			$property = $metadata->hasProperty($name) ? $metadata->getProperty($name) : null;
@@ -127,7 +135,7 @@ class EntityProcessor
 			}
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name/*, $this->entity*/) : null;
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model);
+			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
 			$processor->processEntity();
 			if (!$this->isModified) {
 				$this->isModified = $processor->isModified;
@@ -200,7 +208,7 @@ class EntityProcessor
 				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
 //			}
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model);
+			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
 			if (!$this->isModified) {
 				$this->isModified = $processor->isModified;

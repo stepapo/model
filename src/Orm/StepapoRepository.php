@@ -28,6 +28,7 @@ abstract class StepapoRepository extends Repository
 		?DateTimeInterface $date = null,
 		bool $skipDefaults = false,
 		bool $getOriginalByData = false,
+		bool $fromNeon = false,
 	): bool
 	{
 		if ($getOriginalByData) {
@@ -35,7 +36,7 @@ abstract class StepapoRepository extends Repository
 		}
 		$class = new ReflectionClass($this->getEntityClassName([]));
 		$entity = $original ?: $class->newInstance();
-		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel());
+		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel(), $fromNeon);
 		return $processor->processEntity($parent, $parentName);
 	}
 
@@ -52,6 +53,7 @@ abstract class StepapoRepository extends Repository
 		?DateTimeInterface $date = null,
 		bool $skipDefaults = false,
 		bool $getOriginalByData = false,
+		bool $fromNeon = false,
 	): StepapoEntity
 	{
 		if ($getOriginalByData) {
@@ -59,7 +61,7 @@ abstract class StepapoRepository extends Repository
 		}
 		$class = new ReflectionClass($this->getEntityClassName([]));
 		$entity = $original ?: $class->newInstance();
-		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel());
+		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel(), $fromNeon);
 		$processor->processEntity($parent, $parentName);
 		return $entity;
 	}
