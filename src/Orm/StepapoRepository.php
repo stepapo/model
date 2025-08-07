@@ -19,7 +19,7 @@ abstract class StepapoRepository extends Repository
 	/**
 	 * @throws ReflectionException
 	 */
-	public function createFromDataReturnBool(
+	public function createFromDataAndReturnResult(
 		Item $data,
 		?StepapoEntity $original = null,
 		?StepapoEntity $parent = null,
@@ -29,7 +29,7 @@ abstract class StepapoRepository extends Repository
 		bool $skipDefaults = false,
 		bool $getOriginalByData = false,
 		bool $fromNeon = false,
-	): bool
+	): EntityProcessorResult
 	{
 		if ($getOriginalByData) {
 			$original ??= method_exists($this, 'getByData') ? $this->getByData($data, $parent) : null;
@@ -62,8 +62,7 @@ abstract class StepapoRepository extends Repository
 		$class = new ReflectionClass($this->getEntityClassName([]));
 		$entity = $original ?: $class->newInstance();
 		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel(), $fromNeon);
-		$processor->processEntity($parent, $parentName);
-		return $entity;
+		return $processor->processEntity($parent, $parentName)->entity;
 	}
 
 

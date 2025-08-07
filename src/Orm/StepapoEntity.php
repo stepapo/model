@@ -33,9 +33,6 @@ abstract class StepapoEntity extends Entity implements Injectable
 		$data = $class->newInstance();
 		foreach ($class->getProperties() as $p) {
 			$name = $p->name;
-//			if ($neon && in_array($name, $this->getOmittedProperties(), true)) {
-//				continue;
-//			}
 			$property = $this->getMetadata()->hasProperty($name) ? $this->getMetadata()->getProperty($name) : null;
 			if (!$property) {
 				continue;

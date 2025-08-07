@@ -3,9 +3,11 @@
 namespace Stepapo\Model\Manipulation;
 
 use App\Model\Orm;
+use Nette\Utils\Arrays;
 use Nextras\Dbal\Platforms\Data\Fqn;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
+use Stepapo\Model\Orm\PostProcessable;
 use Stepapo\Utils\Printer;
 use Stepapo\Utils\Service;
 use Tracy\Dumper;
@@ -48,16 +50,17 @@ class Processor implements Service
 										continue;
 									}
 									if (!$entity->getData()->isSameAs($item)) {
-										$isModified = $repository->createFromDataReturnBool($item, $entity, fromNeon: true);
-										if ($isModified) {
+										$result = $repository->createFromDataAndReturnResult($item, $entity, fromNeon: true);
+										if ($result->isModified) {
 											$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 											$this->printer->printText(': updating item ');
 											$this->printer->printText($itemName, 'white');
-											if (method_exists($repository, 'postProcessFromData')) {
+											if ($repository instanceof PostProcessable) {
 												$repository->postProcessFromData($item, $entity, skipDefaults: true);
 											}
 											$count++;
 											$this->printer->printOk();
+											$this->printer->printDiff($result->modifiedValues);
 										}
 									}
 								} else {
@@ -65,7 +68,7 @@ class Processor implements Service
 									$this->printer->printText(': creating item ');
 									$this->printer->printText($itemName, 'white');
 									$entity = $repository->createFromData($item, fromNeon: true);
-									if (method_exists($repository, 'postProcessFromData')) {
+									if ($repository instanceof PostProcessable) {
 										$repository->postProcessFromData($item, $entity);
 									}
 									$count++;

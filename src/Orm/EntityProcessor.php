@@ -19,13 +19,13 @@ use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
 use Stepapo\Utils\Attribute\SkipInManipulation;
-use Tracy\Dumper;
 
 
 class EntityProcessor
 {
 	public bool $isPersisted = false;
 	public bool $isModified = false;
+	public DiffList $modifiedValues;
 
 
 	public function __construct(
@@ -36,11 +36,13 @@ class EntityProcessor
 		private bool $skipDefaults,
 		private IModel $model,
 		private bool $fromNeon = false,
+		private bool $isRelated = false,
 	) {}
 
 
-	public function processEntity(?StepapoEntity $parent = null, ?string $parentName = null): bool
+	public function processEntity(?StepapoEntity $parent = null, ?string $parentName = null): EntityProcessorResult
 	{
+		$this->modifiedValues = new DiffList;
 		$metadata = $this->entity->getMetadata();
 		if ($parent && $parentName) {
 			if (!isset($this->entity->$parentName) || $this->entity->$parentName !== $parent) {
@@ -104,7 +106,7 @@ class EntityProcessor
 		if ($this->isModified && !$this->entity->isModified()) {
 			$this->entity->getRepository()->onAfterPersist($this->entity);
 		}
-		return $this->isModified;
+		return new EntityProcessorResult($this->entity, $this->isModified, $this->modifiedValues);
 	}
 
 
@@ -114,10 +116,12 @@ class EntityProcessor
 		$value = $this->data->$name;
 		if ($property->wrapper === DateTimeImmutable::class) {
 			if ((empty($this->entity->$name) && (!empty($value) || $value === '0')) || $this->entity->$name != $value) {
+				$this->modifiedValues->propertyList[$name] = ['old' => empty($this->entity->$name) ? null : $this->entity->$name->format('Y-m-d H:i:s'), 'new' => $value->format('Y-m-d H:i:s')];
 				$this->entity->$name = $value;
 			}
 		} else {
 			if ((empty($this->entity->$name) && (!empty($value) || $value === '0')) || $this->entity->$name !== $value) {
+				$this->modifiedValues->propertyList[$name] = ['old' => empty($this->entity->$name) ? null : $this->entity->$name, 'new' => $value];
 				$this->entity->$name = $value;
 			}
 		}
@@ -135,9 +139,9 @@ class EntityProcessor
 			}
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name/*, $this->entity*/) : null;
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
+			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon, true);
 			$processor->processEntity();
-			if (!$this->isModified) {
+			if ($processor->isModified) {
 				$this->isModified = $processor->isModified;
 			}
 			$value = $relatedEntity;
@@ -154,6 +158,7 @@ class EntityProcessor
 			(isset($value) && (!isset($this->entity->$name) || $this->entity->$name !== $value))
 			|| ($value === null && $this->entity->$name !== null/* && !$this->entity instanceof PostProcessable*/)
 		) {
+			$this->modifiedValues->propertyList[$name] = ['old' => '', 'new' => $value?->getPersistedId()];
 			$this->entity->$name = $value;
 		}
 	}
@@ -181,6 +186,7 @@ class EntityProcessor
 		sort($newIds);
 		if (!isset($this->entity->$name) || $oldIds !== $newIds) {
 			$this->isModified = true;
+			$this->modifiedValues->propertyList[$name] = ['old' => implode(',', $oldIds), 'new' => implode(',', $newIds)];
 			$this->entity->$name->set($array);
 		}
 	}
@@ -208,10 +214,12 @@ class EntityProcessor
 				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
 //			}
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
+			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon, true);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
-			if (!$this->isModified) {
+			if ($processor->isModified) {
 				$this->isModified = $processor->isModified;
+				$this->modifiedValues->propertyList[$name] ??= new DiffList;
+				$this->modifiedValues->propertyList[$name]->entityList[$key] = $processor->modifiedValues;
 			}
 			$ids[] = $relatedEntity->getPersistedId();
 		}
@@ -219,6 +227,8 @@ class EntityProcessor
 			foreach ($this->entity->$name as $related) {
 				if (!in_array($related->getPersistedId(), $ids, true)) {
 					$this->isModified = true;
+					$this->modifiedValues->propertyList[$name] ??= new DiffList;
+					$this->modifiedValues->propertyList[$name]->propertyList['removedCount'] = ($this->modifiedValues->propertyList[$name]->propertyList['removedCount'] ?? 0) + 1;
 					$relatedRepository->delete($related);
 				}
 			}

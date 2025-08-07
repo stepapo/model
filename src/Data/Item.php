@@ -22,9 +22,5 @@ class Item extends Config
 			throw new InvalidArgumentException("Property '$name' does not exist or is not a collection.");
 		}
 		return new Collection($prop->isInitialized($this) ? $this->$name : []);
-//		if (!property_exists($this, $name)) {
-//			throw new InvalidArgumentException("Property '$name' does not exist or is not a collection.");
-//		}
-//		return new Collection($this->$name ?? []);
 	}
 }

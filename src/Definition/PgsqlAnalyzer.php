@@ -82,15 +82,6 @@ class PgsqlAnalyzer implements Analyzer
 
 	private function getTables(string $schema): array
 	{
-//		return $this->dbal->query("
-//			SELECT
-//				TABLE_SCHEMA,
-//				TABLE_NAME,
-//				TABLE_TYPE
-//			FROM information_schema.TABLES
-//			-- SCHEMA
-//			WHERE TABLE_SCHEMA = %s;
-//		", 'public')->fetchAll();
 		return $this->dbal->query("
 			SELECT DISTINCT ON (pg_class.relname)
 				pg_class.oid AS id,

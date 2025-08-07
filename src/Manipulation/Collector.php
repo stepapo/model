@@ -71,26 +71,6 @@ class Collector implements Service
 	}
 
 
-//	/** @param Manipulation[] $manipulations */
-//	public function mergeManipulations(array $manipulations): Manipulation
-//	{
-//		foreach ($manipulations as $manipulation) {
-//			if (!isset($mergedManipulation)) {
-//				$mergedManipulation = $manipulation;
-//				continue;
-//			}
-//			foreach ($manipulation->items as $name => $item) {
-//				if (!isset($mergedManipulation->items[$name])) {
-//					$mergedManipulation->items[$name] = $item;
-//					continue;
-//				}
-//				$mergedManipulation->items[$name] = $this->mergeItems($manipulation->class, $name, $mergedManipulation->items[$name], $item);
-//			}
-//		}
-//		return $mergedManipulation;
-//	}
-
-
 	public function mergeItems(string $class, array $one, array $two, bool $override): array
 	{
 		foreach ($two as $itemName => $data) {
