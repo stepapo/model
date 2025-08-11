@@ -24,18 +24,18 @@ class PgsqlProcessor implements DbProcessor
 	private Definition $oldDefinition;
 	private Printer $printer;
 	private array $steps = [
+		'dropSchema' => [],
 		'createSchema' => [],
 		'dropSequence' => [],
 		'createSequence' => [],
 		'createTable' => [],
 		'alterTable' => [],
 		'alterSequence' => [],
-		'createIndex' => [],
 		'alterTableDrop' => [],
 		'alterTableAdd' => [],
-		'dropSchema' => [],
 		'dropTable' => [],
 		'dropIndex' => [],
+		'createIndex' => [],
 	];
 
 

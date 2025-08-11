@@ -25,42 +25,44 @@ class Comparator implements Service
 				$result['create'][$schema->name]['all'] = true;
 				continue;
 			}
+			$oldSchema = $old->schemas[$schema->name];
 			foreach ($schema->tables as $table) {
 				if (!isset($old->schemas[$schema->name]->tables[$table->name])) {
 					$result['create'][$schema->name][$table->name]['all'] = true;
 					continue;
 				}
+				$oldTable = $oldSchema->tables[$table->name];
 				foreach ($table->columns as $column) {
-					if (!isset($old->schemas[$schema->name]->tables[$table->name]->columns[$column->name])) {
+					if (!isset($oldTable->columns[$column->name])) {
 						$result['create'][$schema->name][$table->name]['columns'][] = $column->name;
-					} elseif (!$column->isSameAs($old->schemas[$schema->name]->tables[$table->name]->columns[$column->name])) {
+					} elseif (!$column->isSameAs($oldTable->columns[$column->name])) {
 						$result['update'][$schema->name][$table->name]['columns'][] = $column->name;
 					}
 				}
 				foreach ($table->foreignKeys as $foreignKey) {
 					$foreignKey->reverseName = null;
 					$foreignKey->reverseOrder = null;
-					if (!isset($old->schemas[$schema->name]->tables[$table->name]->foreignKeys[$foreignKey->name])) {
+					if (!isset($oldTable->foreignKeys[$foreignKey->name])) {
 						$result['create'][$schema->name][$table->name]['foreignKeys'][] = $foreignKey->keyColumn;
-					} elseif (!$foreignKey->isSameAs($old->schemas[$schema->name]->tables[$table->name]->foreignKeys[$foreignKey->name])) {
+					} elseif (!$foreignKey->isSameAs($oldTable->foreignKeys[$foreignKey->name])) {
 						$result['update'][$schema->name][$table->name]['foreignKeys'][] = $foreignKey->keyColumn;
 					}
 				}
 				foreach ($table->indexes as $index) {
-					if (!isset($old->schemas[$schema->name]->tables[$table->name]->indexes[$index->name])) {
+					if (!isset($oldTable->indexes[$index->name])) {
 						$result['create'][$schema->name][$table->name]['indexes'][] = $index->name;
-					} elseif (!$index->isSameAs($old->schemas[$schema->name]->tables[$table->name]->indexes[$index->name])) {
+					} elseif (!$index->isSameAs($oldTable->indexes[$index->name])) {
 						$result['update'][$schema->name][$table->name]['indexes'][] = $index->name;
 					}
 				}
 				foreach ($table->uniqueKeys as $uniqueKey) {
-					if (!isset($old->schemas[$schema->name]->tables[$table->name]->uniqueKeys[$uniqueKey->name])) {
+					if (!isset($oldTable->uniqueKeys[$uniqueKey->name])) {
 						$result['create'][$schema->name][$table->name]['uniqueKeys'][] = $uniqueKey->name;
-					} elseif (!$uniqueKey->isSameAs($old->schemas[$schema->name]->tables[$table->name]->uniqueKeys[$uniqueKey->name])) {
+					} elseif (!$uniqueKey->isSameAs($oldTable->uniqueKeys[$uniqueKey->name])) {
 						$result['update'][$schema->name][$table->name]['uniqueKeys'][] = $uniqueKey->name;
 					}
 				}
-				if (!$table->primaryKey->isSameAs($old->schemas[$schema->name]->tables[$table->name]->primaryKey)) {
+				if (!$table->primaryKey->isSameAs($oldTable->primaryKey)) {
 					$result['update'][$schema->name][$table->name]['primaryKey'] = true;
 				}
 			}
@@ -70,28 +72,30 @@ class Comparator implements Service
 				$result['remove'][$schema->name]['all'] = true;
 				continue;
 			}
+			$newSchema = $new->schemas[$schema->name];
 			foreach ($schema->tables as $table) {
 				if (!isset($new->schemas[$schema->name]->tables[$table->name])) {
 					$result['remove'][$schema->name][$table->name]['all'] = true;
 					continue;
 				}
+				$newTable = $newSchema->tables[$table->name];
 				foreach ($table->columns as $column) {
-					if (!isset($new->schemas[$schema->name]->tables[$table->name]->columns[$column->name])) {
+					if (!isset($newTable->columns[$column->name])) {
 						$result['remove'][$schema->name][$table->name]['columns'][] = $column->name;
 					}
 				}
 				foreach ($table->foreignKeys as $foreignKey) {
-					if (!isset($new->schemas[$schema->name]->tables[$table->name]->foreignKeys[$foreignKey->keyColumn])) {
+					if (!isset($newTable->foreignKeys[$foreignKey->keyColumn])) {
 						$result['remove'][$schema->name][$table->name]['foreignKeys'][] = $foreignKey->name;
 					}
 				}
 				foreach ($table->indexes as $index) {
-					if (!isset($new->schemas[$schema->name]->tables[$table->name]->indexes[$index->name])) {
+					if (!isset($newTable->indexes[$index->name])) {
 						$result['remove'][$schema->name][$table->name]['indexes'][] = $index->name;
 					}
 				}
 				foreach ($table->uniqueKeys as $uniqueKey) {
-					if (!isset($new->schemas[$schema->name]->tables[$table->name]->uniqueKeys[$uniqueKey->name])) {
+					if (!isset($newTable->uniqueKeys[$uniqueKey->name])) {
 						$result['remove'][$schema->name][$table->name]['uniqueKeys'][] = $uniqueKey->name;
 					}
 				}

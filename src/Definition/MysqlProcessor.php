@@ -25,18 +25,18 @@ class MysqlProcessor implements DbProcessor
 	private Definition $oldDefinition;
 	private Printer $printer;
 	private array $steps = [
+		'dropSchema' => [],
+		'dropTable' => [],
+		'dropSequence' => [],
+		'dropIndex' => [],
 		'createSchema' => [],
 		'createSequence' => [],
 		'createTable' => [],
 		'alterTable' => [],
 		'alterSequence' => [],
-		'createIndex' => [],
 		'alterTableDrop' => [],
 		'alterTableAdd' => [],
-		'dropSchema' => [],
-		'dropTable' => [],
-		'dropSequence' => [],
-		'dropIndex' => [],
+		'createIndex' => [],
 	];
 
 
