@@ -10,6 +10,7 @@ use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Repository\IRepository;
 use Stepapo\Utils\Injectable;
 use Stepapo\Utils\Service;
+use Webovac\Core\Lib\CmsCache;
 
 
 abstract class DataRepository implements Service, Injectable
@@ -19,6 +20,7 @@ abstract class DataRepository implements Service, Injectable
 
 	public function __construct(
 		protected Orm $orm,
+		protected CmsCache $cmsCache,
 		protected Cache $cache,
 	) {}
 
@@ -42,13 +44,13 @@ abstract class DataRepository implements Service, Injectable
 	}
 
 
-	protected function buildCache(): void
+	public function buildCache(): void
 	{
 		if (isset($this->collection)) {
 			return;
 		}
-		$this->cache->remove(lcfirst($this->getName()) . 'Aliases');
-		$this->cache->clean([Cache::Tags => lcfirst($this->getName())]);
+		$this->cmsCache->remove(lcfirst($this->getName()) . 'Aliases');
+		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
 		foreach ($this->getOrmRepository()->findAll() as $entity) {
 			$key = $this->getIdentifier($entity);
 			$item = $entity->getData(forCache: true);
