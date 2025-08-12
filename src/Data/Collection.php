@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Stepapo\Model\Data;
 
 use ArrayObject;
-use InvalidArgumentException;
 
 
 class Collection extends ArrayObject

@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Data;
 
-use App\Model\Text\TextData;
 use InvalidArgumentException;
 use ReflectionClass;
-use Stepapo\Utils\ReflectionHelper;
 use Stepapo\Utils\Config;
+use Stepapo\Utils\ReflectionHelper;
 
 
 class Item extends Config

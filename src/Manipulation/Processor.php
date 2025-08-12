@@ -3,14 +3,12 @@
 namespace Stepapo\Model\Manipulation;
 
 use App\Model\Orm;
-use Nette\Utils\Arrays;
 use Nextras\Dbal\Platforms\Data\Fqn;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Model\Orm\PostProcessable;
 use Stepapo\Utils\Printer;
 use Stepapo\Utils\Service;
-use Tracy\Dumper;
 
 
 class Processor implements Service
