@@ -48,7 +48,7 @@ class Processor implements Service
 										continue;
 									}
 									if (!$entity->getData()->isSameAs($item)) {
-										$result = $repository->createFromData($item, $entity, fromNeon: true);
+										$result = $repository->createFromDataAndReturnResult($item, $entity, fromNeon: true);
 										if ($result->isModified) {
 											$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 											$this->printer->printText(': updating item ');
@@ -65,7 +65,7 @@ class Processor implements Service
 									$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 									$this->printer->printText(': creating item ');
 									$this->printer->printText($itemName, 'white');
-									$entity = $repository->createFromData($item, fromNeon: true)->entity;
+									$entity = $repository->createFromData($item, fromNeon: true);
 									if ($repository instanceof PostProcessable) {
 										$repository->postProcessFromData($item, $entity);
 									}

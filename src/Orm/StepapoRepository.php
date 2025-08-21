@@ -19,7 +19,7 @@ abstract class StepapoRepository extends Repository
 	/**
 	 * @throws ReflectionException
 	 */
-	public function createFromData(
+	public function createFromDataAndReturnResult(
 		Item $data,
 		?StepapoEntity $original = null,
 		?StepapoEntity $parent = null,
@@ -38,6 +38,26 @@ abstract class StepapoRepository extends Repository
 		$entity = $original ?: $class->newInstance();
 		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel(), $fromNeon);
 		return $processor->processEntity($parent, $parentName);
+	}
+
+
+	/**
+	 * @throws ReflectionException
+	 */
+	public function createFromData(
+		Item $data,
+		?StepapoEntity $original = null,
+		?StepapoEntity $parent = null,
+		?string $parentName = null,
+		?Person $person = null,
+		?DateTimeInterface $date = null,
+		bool $skipDefaults = false,
+		bool $getOriginalByData = false,
+		bool $fromNeon = false,
+	): StepapoEntity
+	{
+		$result = $this->createFromDataAndReturnResult($data, $original, $parent, $parentName, $person, $date, $skipDefaults, $getOriginalByData, $fromNeon);
+		return $result->entity;
 	}
 
 
