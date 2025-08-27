@@ -31,11 +31,11 @@ class PgsqlProcessor implements DbProcessor
 		'createSchema' => [],
 		'createSequence' => [],
 		'createTable' => [],
-		'createIndex' => [],
 		'alterTable' => [],
 		'alterSequence' => [],
 		'alterTableDrop' => [],
 		'alterTableAdd' => [],
+		'createIndex' => [],
 	];
 
 
