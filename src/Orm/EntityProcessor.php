@@ -19,6 +19,7 @@ use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
 use Stepapo\Utils\Attribute\SkipInManipulation;
+use Tracy\Dumper;
 
 
 class EntityProcessor
@@ -171,12 +172,14 @@ class EntityProcessor
 		$array = [];
 		foreach ((array) $this->data->$name as $item) {
 			if (is_numeric($item)) {
-				if ($item = $relatedRepository->getById($item)) {
-					$array[] = $item;
+				if ($related = $relatedRepository->getById($item)) {
+					$array[] = $related;
 				}
 			} elseif (method_exists($relatedRepository, 'getByData')) {
-				if ($item = $relatedRepository->getByData($item, $this->entity)) {
-					$array[] = $item;
+				if ($related = $relatedRepository->getByData($item, $this->entity)) {
+					$array[] = $related;
+				} elseif (is_string($item) && method_exists($relatedRepository, 'createFromString')) {
+					$array[] = $relatedRepository->createFromString($item);
 				}
 			}
 		}
