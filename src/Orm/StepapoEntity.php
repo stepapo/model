@@ -16,6 +16,7 @@ use ReflectionException;
 use ReflectionProperty;
 use Stepapo\Model\Data\Item;
 use Stepapo\Utils\Attribute\DontCache;
+use Stepapo\Utils\Attribute\HideInApi;
 use Stepapo\Utils\Injectable;
 
 
@@ -24,7 +25,7 @@ abstract class StepapoEntity extends Entity implements Injectable
 	/**
 	 * @throws ReflectionException
 	 */
-	public function getData(bool $neon = false, bool $forCache = false): Item
+	public function getData(bool $neon = false, bool $forCache = false, bool $api = false, ?array $select = null): Item|array
 	{
 		if (!method_exists($this, 'getDataClass')) {
 			throw new NotSupportedException('Entity does not have data class defined.');
@@ -33,34 +34,39 @@ abstract class StepapoEntity extends Entity implements Injectable
 		$data = $class->newInstance();
 		foreach ($class->getProperties() as $p) {
 			$name = $p->name;
+			if ($select && !isset($select[$name])) {
+				continue;
+			}
 			$property = $this->getMetadata()->hasProperty($name) ? $this->getMetadata()->getProperty($name) : null;
 			if (!$property) {
 				continue;
 			} elseif ($forCache && $p->getAttributes(DontCache::class)) {
 				continue;
+			} elseif ($api && $p->getAttributes(HideInApi::class)) {
+				continue;
 			} elseif (!$property->wrapper) {
 				$data->$name = $this->$name;
 			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
-				$data->$name = $this->shouldGetData($p) ? $this->$name?->getData($neon, $forCache) : $this->$name?->getPersistedId();
-			} elseif ($property->wrapper === OneHasMany::class) {
+				$data->$name = $this->shouldGetData($p) ? $this->$name?->getData($neon, $forCache, $api) : $this->$name?->getPersistedId();
+			} elseif ($property->wrapper === OneHasMany::class && !$api) {
 				foreach ($this->$name as $related) {
-					$relatedData = $related->getData($neon, $forCache);
+					$relatedData = $related->getData($neon, $forCache, $api);
 					$keyProperty = $relatedData::getKeyProperty();
 					if ($keyProperty && $related->$keyProperty instanceof StepapoEntity) {
 						$id = $related->$keyProperty->getPersistedId();
 					} else {
 						$id = $related->getPersistedId();
 					}
-					$data->$name[$id] = $related->getData($neon, $forCache);
-//					$data->$name[$keyProperty ? $relatedData->$keyProperty : $related->getPersistedId()] = $related->getData($neon, $forCache);
+					$data->$name[$id] = $related->getData($neon, $forCache, $api);
+//					$data->$name[$keyProperty ? $relatedData->$keyProperty : $related->getPersistedId()] = $related->getData($neon, $forCache, $api);
 				}
-			} elseif ($property->wrapper === ManyHasMany::class) {
+			} elseif ($property->wrapper === ManyHasMany::class && !$api) {
 				foreach ($this->$name as $related) {
 					$data->$name[] = $related->getPersistedId();
 				}
 			}
 		}
-		return $data;
+		return $api ? (array) $data : $data;
 	}
 
 
