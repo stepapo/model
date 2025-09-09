@@ -23,6 +23,7 @@ use Stepapo\Utils\Injectable;
 abstract class StepapoEntity extends Entity implements Injectable
 {
 	/**
+	 * @throws NotSupportedException
 	 * @throws ReflectionException
 	 */
 	public function getData(bool $neon = false, bool $forCache = false, bool $api = false, ?array $select = null): Item|array
@@ -66,10 +67,13 @@ abstract class StepapoEntity extends Entity implements Injectable
 				}
 			}
 		}
-		return $api ? (array) $data : $data;
+		return $data;
 	}
 
 
+	/**
+	 * @throws NotSupportedException
+	 */
 	public function getTitle(): string
 	{
 		if (!$this->getMetadata()->hasProperty('title')) {
