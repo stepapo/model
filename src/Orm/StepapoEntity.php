@@ -21,7 +21,7 @@ use Stepapo\Utils\Injectable;
 
 abstract class StepapoEntity extends Entity implements Injectable
 {
-	public function toArray(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, callable|null $checkProperty = null): array
+	public function toArray(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, ?callable $checkProperty = null): array
 	{
 		return ToArrayConverter::toArray($this, $mode, $select, checkProperty: $checkProperty);
 	}

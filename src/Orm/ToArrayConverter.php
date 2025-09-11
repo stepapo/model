@@ -22,7 +22,7 @@ class ToArrayConverter
 		int $type = self::RELATIONSHIP_AS_IS,
 		?array $select = null,
 		int $recursionLevel = 0,
-		callable $checkProperty = null,
+		?callable $checkProperty = null,
 	): array
 	{
 		$return = [];
