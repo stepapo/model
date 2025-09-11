@@ -7,7 +7,6 @@ namespace Stepapo\Model\Orm;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Entity\Reflection\PropertyMetadata;
 use Nextras\Orm\Relationships\IRelationshipCollection;
-use Stepapo\Utils\Attribute\HideInApi;
 
 
 class ToArrayConverter
@@ -23,14 +22,15 @@ class ToArrayConverter
 		int $type = self::RELATIONSHIP_AS_IS,
 		?array $select = null,
 		int $recursionLevel = 0,
+		callable $checkProperty = null,
 	): array
 	{
 		$return = [];
 		$metadata = $entity->getMetadata();
 		$select = static::normalizeSelect((array) $select);
 
-		foreach (static::sortProperties($metadata->getProperties()) as $name => $metadataProperty) {
-			if (($select && !isset($select[$name])) || array_key_exists(HideInApi::class, $metadataProperty->types)) {
+		foreach (static::sortProperties($metadata->getProperties()) as $name => $propertyMetadata) {
+			if (($select && !isset($select[$name])) || ($checkProperty && $checkProperty($propertyMetadata))) {
 				continue;
 			}
 			if (!$entity->hasValue($name)) {
@@ -52,7 +52,7 @@ class ToArrayConverter
 				if ($select) {
 					$collection = [];
 					foreach ($value as $collectionEntity) {
-						$collection[$collectionEntity->getPersistedId()] = static::toArray($collectionEntity, $type, $select[$name] === true ? [] : $select[$name], $recursionLevel + 1);
+						$collection[$collectionEntity->getPersistedId()] = static::toArray($collectionEntity, $type, $select[$name] === true ? [] : $select[$name], $recursionLevel + 1, $checkProperty);
 					}
 					$value = $collection;
 				} else {

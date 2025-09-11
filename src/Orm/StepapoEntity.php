@@ -16,15 +16,14 @@ use ReflectionException;
 use ReflectionProperty;
 use Stepapo\Model\Data\Item;
 use Stepapo\Utils\Attribute\DontCache;
-use Stepapo\Utils\Attribute\HideInApi;
 use Stepapo\Utils\Injectable;
 
 
 abstract class StepapoEntity extends Entity implements Injectable
 {
-	public function toArray(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null): array
+	public function toArray(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, ?callable $checkProperty = null): array
 	{
-		return ToArrayConverter::toArray($this, $mode, $select);
+		return ToArrayConverter::toArray($this, $mode, $select, checkProperty: $checkProperty);
 	}
 
 
