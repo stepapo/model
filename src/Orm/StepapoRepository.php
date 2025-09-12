@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Stepapo\Model\Orm;
 
 use App\Model\Person\Person;
-use App\Model\Web\WebData;
 use DateTimeInterface;
 use Nette\Utils\Strings;
 use Nextras\Orm\Entity\Entity;
@@ -13,7 +12,6 @@ use Nextras\Orm\Repository\Repository;
 use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
-use Stepapo\Model\Orm\PrivateRepository;
 
 
 abstract class StepapoRepository extends Repository
