@@ -6,6 +6,7 @@ namespace Stepapo\Model\Definition\Config;
 
 use Nextras\Orm\StorageReflection\StringHelper;
 use Stepapo\Utils\Attribute\KeyProperty;
+use Stepapo\Utils\Attribute\SkipInComparison;
 use Stepapo\Utils\Config;
 
 
@@ -15,6 +16,8 @@ class Column extends Config
 	public string $type;
 	public bool $null;
 	public bool $auto = false;
+	#[SkipInComparison] public bool $private = false;
+	#[SkipInComparison] public bool $internal = false;
 	public mixed $default = null;
 	public ?string $onUpdate = null;
 
@@ -38,7 +41,10 @@ class Column extends Config
 				'datetime' => 'DateTimeImmutable',
 				'float' => 'float',
 				'fulltext' => 'string',
-			}) . ($this->null ? '|null' : '');
+			})
+			. ($this->null ? '|null' : '')
+			. ($this->private ? '|PrivateProperty' : '')
+			. ($this->internal ? '|InternalProperty' : '');
 	}
 
 
