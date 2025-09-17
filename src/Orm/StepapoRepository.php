@@ -7,6 +7,7 @@ namespace Stepapo\Model\Orm;
 use App\Model\Person\Person;
 use DateTimeInterface;
 use Nette\Utils\Strings;
+use Nextras\Orm\Collection\Helpers\ConditionParser;
 use Nextras\Orm\Entity\Entity;
 use Nextras\Orm\Repository\Repository;
 use ReflectionClass;
@@ -16,6 +17,9 @@ use Stepapo\Model\Data\Item;
 
 abstract class StepapoRepository extends Repository
 {
+	private StepapoConditionParser|null $conditionParser = null;
+
+
 	/**
 	 * @throws ReflectionException
 	 */
@@ -72,5 +76,14 @@ abstract class StepapoRepository extends Repository
 			return $this->createSlug($title, $entity, $separator, $num + 1);
 		}
 		return $separator === '-' ? $slug : str_replace('-', $separator, $slug);
+	}
+
+
+	public function getConditionParser(): StepapoConditionParser
+	{
+		if ($this->conditionParser === null) {
+			$this->conditionParser = new StepapoConditionParser;
+		}
+		return $this->conditionParser;
 	}
 }
