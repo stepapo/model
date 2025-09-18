@@ -23,10 +23,6 @@ use Nextras\Orm\Exception\InvalidStateException;
 
 class StepapoConditionParser extends ConditionParser
 {
-	// language=PhpRegExp
-	protected const PATH_REGEXP = '(?:([\w\\\]+)::)?([\w\\\]++(?:->\w++)*+)';
-
-
 	public function parsePropertyOperator(string $condition): array
 	{
 		// language=PhpRegExp
@@ -34,33 +30,40 @@ class StepapoConditionParser extends ConditionParser
 		if (preg_match($regexp, $condition, $matches) !== 1) {
 			return [CompareEqualsFunction::class, $condition];
 		}
-		$useOperator = true;
 		$operator = $matches['operator'] ?? '=';
+		$function = $matches['function'] ?? null;
+		$condition = $this->parsePropertyFunction($condition);
+
+		return !$function || in_array($function, ['avg', 'count', 'max', 'min', 'sum', 'year', 'month', 'day', 'date'], true)
+			? match ($operator) {
+				'=' => [CompareEqualsFunction::class, $condition],
+				'!=' => [CompareNotEqualsFunction::class, $condition],
+				'>=' => [CompareGreaterThanEqualsFunction::class, $condition],
+				'>' => [CompareGreaterThanFunction::class, $condition],
+				'<=' => [CompareSmallerThanEqualsFunction::class, $condition],
+				'<' => [CompareSmallerThanFunction::class, $condition],
+				'~'	=> [CompareLikeFunction::class, $condition],
+				default => throw new InvalidStateException,
+			} : $condition;
+	}
+
+
+	public function parsePropertyFunction(string $propertyPath): array|string
+	{
+		// language=PhpRegExp
+		$regexp = '#^(?P<path>' . self::PATH_REGEXP . ')(:(?P<function>[a-zA-Z]+))?$#';
+		if (preg_match($regexp, $propertyPath, $matches) !== 1) {
+			throw new InvalidArgumentException('Unsupported condition format.');
+		}
 		$path = $matches['path'];
 		$function = $matches['function'] ?? null;
-		if ($function) {
-			$path = match ($function) {
-				'avg' => [AvgAggregateFunction::class, $path],
-				'count' => [CountAggregateFunction::class, $path],
-				'max' => [MaxAggregateFunction::class, $path],
-				'min' => [MinAggregateFunction::class, $path],
-				'sum' => [SumAggregateFunction::class, $path],
-				default => [$function, $path],
-			};
-			if (!in_array($function, ['avg', 'count', 'max', 'min', 'sum', 'year', 'month', 'day', 'date'], true)) {
-				$useOperator = false;
-			}
-		}
-
-		return $useOperator ? match ($operator) {
-			'=' => [CompareEqualsFunction::class, $path],
-			'!=' => [CompareNotEqualsFunction::class, $path],
-			'>=' => [CompareGreaterThanEqualsFunction::class, $path],
-			'>' => [CompareGreaterThanFunction::class, $path],
-			'<=' => [CompareSmallerThanEqualsFunction::class, $path],
-			'<' => [CompareSmallerThanFunction::class, $path],
-			'~'	=> [CompareLikeFunction::class, $path],
-			default => throw new InvalidStateException,
+		return $function ? match ($function) {
+			'avg' => [AvgAggregateFunction::class, $path],
+			'count' => [CountAggregateFunction::class, $path],
+			'max' => [MaxAggregateFunction::class, $path],
+			'min' => [MinAggregateFunction::class, $path],
+			'sum' => [SumAggregateFunction::class, $path],
+			default => [$function, $path],
 		} : $path;
 	}
 
