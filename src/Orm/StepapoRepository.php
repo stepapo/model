@@ -6,18 +6,48 @@ namespace Stepapo\Model\Orm;
 
 use App\Model\Person\Person;
 use DateTimeInterface;
+use Nette\DI\Attributes\Inject;
 use Nette\Utils\Strings;
-use Nextras\Orm\Collection\Helpers\ConditionParser;
+use Nextras\Orm\Collection\Functions\CollectionFunction;
 use Nextras\Orm\Entity\Entity;
+use Nextras\Orm\Mapper\IMapper;
+use Nextras\Orm\Repository\IDependencyProvider;
 use Nextras\Orm\Repository\Repository;
 use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
+use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
+use Stepapo\Utils\Injectable;
 
 
-abstract class StepapoRepository extends Repository
+abstract class StepapoRepository extends Repository implements Injectable
 {
-	private StepapoConditionParser|null $conditionParser = null;
+	#[Inject] public StepapoConditionParser $conditionParser;
+	/** @var StepapoOrmFunction[] */ private array $functions;
+
+
+	/** @param StepapoOrmFunction[] $functions */
+	public function __construct(
+		IMapper $mapper,
+		IDependencyProvider|null $dependencyProvider = null,
+		array $functions = []
+	) {
+		foreach ($functions as $function) {
+			$this->functions[$function::class] = $function;
+		}
+		parent::__construct($mapper, $dependencyProvider);
+	}
+
+
+	public function createCollectionFunction(string $name): CollectionFunction
+	{
+		bdump($this->functions);
+		if (isset($this->functions[$name])) {
+			return $this->functions[$name];
+		} else {
+			return parent::createCollectionFunction($name);
+		}
+	}
 
 
 	/**
@@ -81,9 +111,6 @@ abstract class StepapoRepository extends Repository
 
 	public function getConditionParser(): StepapoConditionParser
 	{
-		if ($this->conditionParser === null) {
-			$this->conditionParser = new StepapoConditionParser;
-		}
 		return $this->conditionParser;
 	}
 }

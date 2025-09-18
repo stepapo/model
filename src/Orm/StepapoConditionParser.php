@@ -2,7 +2,6 @@
 
 namespace Stepapo\Model\Orm;
 
-use App\Lib\OrmFunctions;
 use Nextras\Orm\Collection\Functions\AvgAggregateFunction;
 use Nextras\Orm\Collection\Functions\CompareEqualsFunction;
 use Nextras\Orm\Collection\Functions\CompareGreaterThanEqualsFunction;
@@ -19,52 +18,81 @@ use Nextras\Orm\Collection\Helpers\ConditionParser;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Exception\InvalidArgumentException;
 use Nextras\Orm\Exception\InvalidStateException;
+use Stepapo\Model\Orm\Functions\CallableFromProperty;
+use Stepapo\Model\Orm\Functions\Comparable;
+use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
+use Stepapo\Utils\Service;
 
 
-class StepapoConditionParser extends ConditionParser
+class StepapoConditionParser extends ConditionParser implements Service
 {
+	private const array AGGREGATE_FUNCTIONS = [
+		'avg' => AvgAggregateFunction::class,
+		'count' => CountAggregateFunction::class,
+		'max' => MaxAggregateFunction::class,
+		'min' => MinAggregateFunction::class,
+		'sum' => SumAggregateFunction::class,
+	];
+
+	private const array COMPARE_FUNCTIONS = [
+		'=' => CompareEqualsFunction::class,
+		'!=' => CompareNotEqualsFunction::class,
+		'>=' => CompareGreaterThanEqualsFunction::class,
+		'>' => CompareGreaterThanFunction::class,
+		'<=' => CompareSmallerThanEqualsFunction::class,
+		'<' => CompareSmallerThanFunction::class,
+		'~'	=> CompareLikeFunction::class,
+	];
+
+	/** @var StepapoOrmFunction[] */ private array $functions = [];
+
+
+	/** @param StepapoOrmFunction[] $functions */
+	public function __construct(
+		array $functions
+	) {
+		foreach ($functions as $function) {
+			$rc = new \ReflectionClass($function);
+			$this->functions[lcfirst($rc->getShortName())] = $function;
+		}
+		$this->functions = array_merge(self::AGGREGATE_FUNCTIONS, $this->functions);
+	}
+
+
 	public function parsePropertyOperator(string $condition): array
 	{
 		// language=PhpRegExp
-		$regexp = '#^(?P<path>' . self::PATH_REGEXP . ')(:(?P<function>[a-zA-Z]+))?(?P<operator>!=|<=|>=|=|>|<|~)?$#';
+		$regexp = '#^(?P<path>' . self::PATH_REGEXP . ')(:(?P<function>\w+))?(?P<operator>!=|<=|>=|=|>|<|~)?$#';
 		if (preg_match($regexp, $condition, $matches) !== 1) {
 			return [CompareEqualsFunction::class, $condition];
 		}
 		$operator = $matches['operator'] ?? '=';
 		$function = $matches['function'] ?? null;
 		$condition = $this->parsePropertyFunction($condition);
-
-		return !$function || in_array($function, ['avg', 'count', 'max', 'min', 'sum', 'year', 'month', 'day', 'date'], true)
-			? match ($operator) {
-				'=' => [CompareEqualsFunction::class, $condition],
-				'!=' => [CompareNotEqualsFunction::class, $condition],
-				'>=' => [CompareGreaterThanEqualsFunction::class, $condition],
-				'>' => [CompareGreaterThanFunction::class, $condition],
-				'<=' => [CompareSmallerThanEqualsFunction::class, $condition],
-				'<' => [CompareSmallerThanFunction::class, $condition],
-				'~'	=> [CompareLikeFunction::class, $condition],
-				default => throw new InvalidStateException,
-			} : $condition;
+		return !$function || array_key_exists($function, self::AGGREGATE_FUNCTIONS) || $this->functions[$function] instanceof Comparable
+			? [self::COMPARE_FUNCTIONS[$operator], $condition]
+			: $condition;
 	}
 
 
 	public function parsePropertyFunction(string $propertyPath): array|string
 	{
 		// language=PhpRegExp
-		$regexp = '#^(?P<path>' . self::PATH_REGEXP . ')(:(?P<function>[a-zA-Z]+))?$#';
+		$regexp = '#^(?P<path>' . self::PATH_REGEXP . ')(:(?P<function>\w+))?(?P<operator>!=|<=|>=|=|>|<|~)?$#';
 		if (preg_match($regexp, $propertyPath, $matches) !== 1) {
 			throw new InvalidArgumentException('Unsupported condition format.');
 		}
 		$path = $matches['path'];
 		$function = $matches['function'] ?? null;
-		return $function ? match ($function) {
-			'avg' => [AvgAggregateFunction::class, $path],
-			'count' => [CountAggregateFunction::class, $path],
-			'max' => [MaxAggregateFunction::class, $path],
-			'min' => [MinAggregateFunction::class, $path],
-			'sum' => [SumAggregateFunction::class, $path],
-			default => [$function, $path],
-		} : $path;
+		if ($function) {
+			$collectionFunction = $this->functions[$function] ?? null;
+			if (!$collectionFunction || (!array_key_exists($function, self::AGGREGATE_FUNCTIONS) && !$collectionFunction instanceof CallableFromProperty)) {
+				throw new InvalidArgumentException("Function '$function' does not exist.");
+			}
+		}
+		return $function
+			? [is_string($collectionFunction) ? $collectionFunction : $collectionFunction::class, $path]
+			: $path;
 	}
 
 
