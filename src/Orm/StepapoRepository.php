@@ -41,7 +41,6 @@ abstract class StepapoRepository extends Repository implements Injectable
 
 	public function createCollectionFunction(string $name): CollectionFunction
 	{
-		bdump($this->functions);
 		if (isset($this->functions[$name])) {
 			return $this->functions[$name];
 		} else {
