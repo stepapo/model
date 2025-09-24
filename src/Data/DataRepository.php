@@ -50,7 +50,7 @@ abstract class DataRepository implements Service, Injectable
 
 	public function buildCache(): void
 	{
-		if (isset($this->collection)) {
+		if ($this->isReady()) {
 			return;
 		}
 		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
@@ -60,6 +60,7 @@ abstract class DataRepository implements Service, Injectable
 			$this->cacheItem($key, $item);
 			$this->addItemToCollection($key, $item);
 		}
+		$this->setReady();
 	}
 
 
@@ -119,5 +120,17 @@ abstract class DataRepository implements Service, Injectable
 				$this->collection[$key] = $item;
 			}
 		}
+	}
+
+
+	protected function isReady(): bool
+	{
+		return (bool) $this->cache->load('ready');
+	}
+
+
+	protected function setReady(bool $ready = true): void
+	{
+		$this->cache->save('ready', $ready, [Cache::Tags => lcfirst($this->getName())]);
 	}
 }
