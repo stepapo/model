@@ -50,9 +50,6 @@ abstract class DataRepository implements Service, Injectable
 
 	public function buildCache(): void
 	{
-		if ($this->isReady()) {
-			return;
-		}
 		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
 		foreach ($this->getOrmRepository()->findAll() as $entity) {
 			$key = $this->getIdentifier($entity);
@@ -108,9 +105,11 @@ abstract class DataRepository implements Service, Injectable
 	protected function addItemToCollection(mixed $key, ?Item $item = null): void
 	{
 		if (!isset($this->collection) || !array_key_exists($key, (array) $this->collection)) {
-			$item = $this->cache->load(lcfirst($this->getName()) . "/$key");
+			$item ??= $this->cache->load(lcfirst($this->getName()) . "/$key");
 			if (!$item) {
-				$this->buildCache();
+				if (!$this->isReady()) {
+					$this->buildCache();
+				}
 				$item = $this->collection[$key] ?? null;
 			}
 			if (!isset($this->collection)) {
