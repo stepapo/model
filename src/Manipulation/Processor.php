@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Stepapo\Model\Manipulation;
 
 use App\Model\Orm;
