@@ -54,7 +54,7 @@ class Processor implements Service
 										if ($result->isModified) {
 											$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 											$this->printer->printText(': updating item ');
-											$this->printer->printText($itemName, 'white');
+											$this->printer->printText((string) $itemName, 'white');
 											if ($repository instanceof PostProcessable) {
 												$repository->postProcessFromData($item, $entity, skipDefaults: true);
 											}
@@ -66,7 +66,7 @@ class Processor implements Service
 								} else {
 									$this->printer->printText($repository->getMapper()->getTableName() instanceof Fqn ? $repository->getMapper()->getTableName()->getUnescaped() : $repository->getMapper()->getTableName(), 'white');
 									$this->printer->printText(': creating item ');
-									$this->printer->printText($itemName, 'white');
+									$this->printer->printText((string) $itemName, 'white');
 									$entity = $repository->createFromData($item, fromNeon: true);
 									if ($repository instanceof PostProcessable) {
 										$repository->postProcessFromData($item, $entity);
