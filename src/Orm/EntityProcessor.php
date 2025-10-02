@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Orm;
 
-use App\Model\File\FileData;
-use App\Model\File\FileRepository;
-use App\Model\Person\Person;
+use Build\Model\File\FileData;
+use Build\Model\File\FileRepository;
+use Build\Model\Person\Person;
 use DateTimeInterface;
 use Nextras\Dbal\Utils\DateTimeImmutable;
 use Nextras\Orm\Entity\Reflection\PropertyMetadata;

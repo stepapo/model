@@ -65,10 +65,10 @@ Analyzes Nextras ORM entities, compares to Definition configs and updates entity
 
 See [Definitions](#definitions)
 
-- `App\Model\Person\Person.php`
+- `Build\Model\Person\Person.php`
 
 ```php
-namespace App\Model\Person;
+namespace Build\Model\Person;
 
 class Person extends Stepapo\Model\Orm\StepapoEntity
 {
@@ -78,7 +78,7 @@ class Person extends Stepapo\Model\Orm\StepapoEntity
 - `bin/processEntities.php`
 
 ```php
-$generator = new Stepapo\Generator\Generator;
+$generator = new Webovac\Generator\Generator;
 $propertyProcessor = new PropertyProcessor(['defaultSchema' => /* 'public' for pgsql, db name for mysql */], $generator);
 $propertyProcessor->process([__DIR__ . '/../config/definitions']);
 ```
@@ -86,7 +86,7 @@ $propertyProcessor->process([__DIR__ . '/../config/definitions']);
 - results in updated entity file
 
 ```php
-namespace App\Model\Person;
+namespace Build\Model\Person;
 
 /**
  * @property int $id {primary}
@@ -107,10 +107,12 @@ class Person extends Stepapo\Model\Orm\StepapoEntity
 
 Analyzes database rows, compares to Manipulation configs and runs DML queries if needed. Requires Nette DI and Nextras ORM.
 
-- `App\Model\Person\Person.php`
+- `Build\Model\Person\Person.php`
 
 ```php
-namespace App\Model\Person;
+namespace Build\Model\Person;
+
+use Build\Model\Person\PersonData;
 
 /**
  * @method PersonData getData()
@@ -126,10 +128,10 @@ class Person extends Stepapo\Model\Orm\StepapoEntity
 
 Generate properties with [Entity Properties](#entity-properties).
 
-- `App\Model\Person\PersonData.php`
+- `Build\Model\Person\PersonData.php`
 
 ```php
-namespace App\Model\Person;
+namespace Build\Model\Person;
 
 class PersonData extends Stepapo\Model\Data\Item
 {
@@ -140,10 +142,10 @@ class PersonData extends Stepapo\Model\Data\Item
 }
 ```
 
-- `App\Model\Person\PersonRepository.php`
+- `Build\Model\Person\PersonRepository.php`
 
 ```php
-namespace App\Model\Person;
+namespace Build\Model\Person;
 
 class PersonRepository extends Stepapo\Model\Orm\StepapoRepository
 {
@@ -153,7 +155,7 @@ class PersonRepository extends Stepapo\Model\Orm\StepapoRepository
 - `config/manipulations/persons.neon`
 
 ```neon
-class: App\Model\Person\PersonData
+class: Build\Model\Person\PersonData
 items:
     admin:
         email: 'admin@test.test'

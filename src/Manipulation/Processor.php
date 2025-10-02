@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Manipulation;
 
-use App\Model\Orm;
+use Build\Model\Orm;
 use Nextras\Dbal\Platforms\Data\Fqn;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;

@@ -19,7 +19,6 @@ use Nextras\Orm\Collection\Functions\SumAggregateFunction;
 use Nextras\Orm\Collection\Helpers\ConditionParser;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Exception\InvalidArgumentException;
-use Nextras\Orm\Exception\InvalidStateException;
 use Stepapo\Model\Orm\Functions\CallableFromProperty;
 use Stepapo\Model\Orm\Functions\Comparable;
 use Stepapo\Model\Orm\Functions\StepapoOrmFunction;

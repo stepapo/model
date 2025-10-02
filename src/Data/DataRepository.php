@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Data;
 
-use App\Model\Orm;
+use Build\Model\Orm;
 use Nette\Caching\Cache;
 use Nette\Caching\Storage;
 use Nextras\Orm\Entity\IEntity;
@@ -78,7 +78,7 @@ abstract class DataRepository implements Service, Injectable
 	protected function getOrmRepository(): IRepository
 	{
 		$name = $this->getName();
-		return $this->orm->getRepository("App\\Model\\$name\\{$name}Repository");
+		return $this->orm->getRepository("Build\\Model\\$name\\{$name}Repository");
 	}
 
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Stepapo\Model\Definition;
 
 use Nette\Utils\Arrays;
-use Stepapo\Generator\Generator;
 use Stepapo\Utils\Printer;
+use Webovac\Generator\Generator;
 
 
 class PropertyProcessor
@@ -16,7 +16,7 @@ class PropertyProcessor
 
 
 	public function __construct(
-		private array $parameters,
+		array $parameters,
 		private Generator $generator,
 	) {
 		$this->printer = new Printer;
@@ -28,13 +28,6 @@ class PropertyProcessor
 	{
 		$count = 0;
 		$start = microtime(true);
-		$reset = false;
-		foreach ($_SERVER['argv'] as $arg) {
-			if ($arg === '--reset') {
-				$reset = true;
-				break;
-			}
-		}
 		$this->printer->printBigSeparator();
 		$this->printer->printLine('Properties', 'aqua');
 		$this->printer->printSeparator();
@@ -106,7 +99,7 @@ class PropertyProcessor
 			}
 			# CHECKING FOR CHANGES
 			foreach ($commentsAfter as $tableName => $commentAfter) {
-				if ($reset || $commentAfter !== $commentsBefore[$tableName]) {
+				if ($commentAfter !== $commentsBefore[$tableName]) {
 					$this->printer->printText($tableName, 'white');
 					$this->printer->printText(": updated properties");
 					$this->printer->printOk();

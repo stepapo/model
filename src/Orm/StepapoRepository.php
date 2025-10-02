@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Orm;
 
-use App\Model\Person\Person;
+use Build\Model\Person\Person;
 use DateTimeInterface;
 use Nette\DI\Attributes\Inject;
 use Nette\Utils\Strings;
