@@ -13,6 +13,7 @@ class PropertyProcessor
 {
 	private Printer $printer;
 	private Collector $collector;
+	private array $commentsBefore = [];
 
 
 	public function __construct(
@@ -21,6 +22,21 @@ class PropertyProcessor
 	) {
 		$this->printer = new Printer;
 		$this->collector = new Collector($parameters);
+	}
+
+
+	public function setCommentsBefore($folders): void
+	{
+		# GETTING ORIGINAL COMMENTS
+		$definition = $this->collector->getDefinition($folders);
+		foreach ($definition->schemas as $schema) {
+			foreach ($schema->tables as $table) {
+				if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
+					continue;
+				}
+				$this->commentsBefore[$table->name] = $this->generator->getEntityComments($table, $table->module);
+			}
+		}
 	}
 
 
@@ -33,16 +49,6 @@ class PropertyProcessor
 		$this->printer->printSeparator();
 		try {
 			$definition = $this->collector->getDefinition($folders);
-			# GETTING ORIGINAL COMMENTS
-			$commentsBefore = [];
-			foreach ($definition->schemas as $schema) {
-				foreach ($schema->tables as $table) {
-					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
-						continue;
-					}
-					$commentsBefore[$table->name] = $this->generator->getEntityComments($table, $table->module);
-				}
-			}
 			# GENERATING SIMPLE PROPERTIES
 			foreach ($definition->schemas as $schema) {
 				foreach ($schema->tables as $table) {
@@ -99,7 +105,7 @@ class PropertyProcessor
 			}
 			# CHECKING FOR CHANGES
 			foreach ($commentsAfter as $tableName => $commentAfter) {
-				if ($commentAfter !== $commentsBefore[$tableName]) {
+				if ($commentAfter !== $this->commentsBefore[$tableName]) {
 					$this->printer->printText($tableName, 'white');
 					$this->printer->printText(": updated properties");
 					$this->printer->printOk();
