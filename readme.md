@@ -14,7 +14,7 @@ composer require stepapo/model
 
 ```neon
 extensions:
-    stepapo.model: Stepapo\Model\DI\ModelExtension
+    stepapo.model: Stepapo\Model\DI\GeneratorExtension
 
 stepapo.model:
     parameters: # array of parameters to use in various configurations,
@@ -78,7 +78,7 @@ class Person extends Stepapo\Model\Orm\StepapoEntity
 - `bin/processEntities.php`
 
 ```php
-$generator = new Webovac\Generator\Generator;
+$generator = new \Webovac\Generator\Lib\Generator;
 $propertyProcessor = new PropertyProcessor(['defaultSchema' => /* 'public' for pgsql, db name for mysql */], $generator);
 $propertyProcessor->process([__DIR__ . '/../config/definitions']);
 ```

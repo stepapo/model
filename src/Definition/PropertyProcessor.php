@@ -6,7 +6,7 @@ namespace Stepapo\Model\Definition;
 
 use Nette\Utils\Arrays;
 use Stepapo\Utils\Printer;
-use Webovac\Generator\Generator;
+use Webovac\Generator\Lib\Generator;
 
 
 class PropertyProcessor
@@ -27,7 +27,6 @@ class PropertyProcessor
 
 	public function setCommentsBefore($folders): void
 	{
-		# GETTING ORIGINAL COMMENTS
 		$definition = $this->collector->getDefinition($folders);
 		foreach ($definition->schemas as $schema) {
 			foreach ($schema->tables as $table) {
@@ -77,9 +76,9 @@ class PropertyProcessor
 					if (count($table->columns) === 2 && $table->primaryKey && count($table->primaryKey->columns) === 2) {
 						$from = Arrays::first($table->foreignKeys);
 						$to = Arrays::last($table->foreignKeys);
-						$this->generator->updateEntityManyHasMany($table, $from, $to, true);
+						$this->generator->updateEntityManyHasMany($table, $from, $to, isMain: true);
 						if ($to->reverseName) {
-							$this->generator->updateEntityManyHasMany($table, $to, $from, false);
+							$this->generator->updateEntityManyHasMany($table, $to, $from);
 						}
 					}
 				}
