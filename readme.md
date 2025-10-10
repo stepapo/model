@@ -14,7 +14,7 @@ composer require stepapo/model
 
 ```neon
 extensions:
-    stepapo.model: Stepapo\Model\DI\GeneratorExtension
+    stepapo.model: Stepapo\Model\DI\ModelExtension
 
 stepapo.model:
     parameters: # array of parameters to use in various configurations,
