@@ -57,36 +57,18 @@ App\Bootstrap::boot()
     ->process([__DIR__ . '/../config/definitions']);
 ```
 
-### Entity Properties
+### Manipulations
 
-Analyzes Nextras ORM entities, compares to Definition configs and updates entity properties if needed. Requires Nextras ORM.
-
-- `config/definitions/db.neon`
-
-See [Definitions](#definitions)
+Analyzes database rows, compares to Manipulation configs and runs DML queries if needed. Requires Nette DI and Nextras ORM.
 
 - `Build\Model\Person\Person.php`
 
-```php
-namespace Build\Model\Person;
-
-class Person extends Stepapo\Model\Orm\StepapoEntity
-{
-}
-```
-
-- `bin/processEntities.php`
-
-```php
-$generator = new \Webovac\Generator\Lib\Generator;
-$propertyProcessor = new PropertyProcessor(['defaultSchema' => /* 'public' for pgsql, db name for mysql */], $generator);
-$propertyProcessor->process([__DIR__ . '/../config/definitions']);
-```
-
-- results in updated entity file
+You can generate entity properties with [Webovac Generator](https://github.com/webovac/generator#entity-properties).
 
 ```php
 namespace Build\Model\Person;
+
+use Build\Model\Person\PersonData;
 
 /**
  * @property int $id {primary}
@@ -97,24 +79,7 @@ namespace Build\Model\Person;
  *
  * @property DateTimeImmutable $createdAt {default now}
  * @property DateTimeImmutable|null $updatedAt
- */
-class Person extends Stepapo\Model\Orm\StepapoEntity
-{
-}
-```
-
-### Manipulations
-
-Analyzes database rows, compares to Manipulation configs and runs DML queries if needed. Requires Nette DI and Nextras ORM.
-
-- `Build\Model\Person\Person.php`
-
-```php
-namespace Build\Model\Person;
-
-use Build\Model\Person\PersonData;
-
-/**
+ * 
  * @method PersonData getData()
  */
 class Person extends Stepapo\Model\Orm\StepapoEntity
@@ -125,8 +90,6 @@ class Person extends Stepapo\Model\Orm\StepapoEntity
     }
 }
 ```
-
-Generate properties with [Entity Properties](#entity-properties).
 
 - `Build\Model\Person\PersonData.php`
 
