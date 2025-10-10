@@ -13,7 +13,6 @@ use Stepapo\Utils\Config;
 
 class Table extends Config
 {
-	public string $type = 'create';
 	#[KeyProperty] public string $name;
 	public ?string $module = null;
 	/** @var Column[] */ #[ArrayOfType(Column::class)] public array $columns = [];
