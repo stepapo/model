@@ -20,6 +20,8 @@ class Foreign extends Config
 	public string $onUpdate = 'cascade';
 	public ?string $reverseName = null;
 	public ?string $reverseOrder = null;
+	public bool $reverseSkipInManipulation = false;
+	public bool $reverseDontCache = false;
 
 
 	public function process(string $tableName)

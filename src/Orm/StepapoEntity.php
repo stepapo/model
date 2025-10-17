@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Stepapo\Model\Orm;
 
 use Nette\NotSupportedException;
-use Nette\Utils\Type;
 use Nextras\Orm\Entity\Entity;
 use Nextras\Orm\Relationships\ManyHasMany;
 use Nextras\Orm\Relationships\ManyHasOne;
@@ -13,9 +12,10 @@ use Nextras\Orm\Relationships\OneHasMany;
 use Nextras\Orm\Relationships\OneHasOne;
 use ReflectionClass;
 use ReflectionException;
-use ReflectionProperty;
 use Stepapo\Model\Data\Item;
+use Stepapo\Utils\Attribute\ArrayOfType;
 use Stepapo\Utils\Attribute\DontCache;
+use Stepapo\Utils\Attribute\Type;
 use Stepapo\Utils\Injectable;
 
 
@@ -31,7 +31,7 @@ abstract class StepapoEntity extends Entity implements Injectable
 	 * @throws NotSupportedException
 	 * @throws ReflectionException
 	 */
-	public function getData(bool $neon = false, bool $forCache = false, ?array $select = null): Item|array
+	public function getData(bool $forCache = false): Item
 	{
 		if (!method_exists($this, 'getDataClass')) {
 			throw new NotSupportedException('Entity does not have data class defined.');
@@ -40,9 +40,6 @@ abstract class StepapoEntity extends Entity implements Injectable
 		$data = $class->newInstance();
 		foreach ($class->getProperties() as $p) {
 			$name = $p->name;
-			if ($select && !isset($select[$name])) {
-				continue;
-			}
 			$property = $this->getMetadata()->hasProperty($name) ? $this->getMetadata()->getProperty($name) : null;
 			if (!$property) {
 				continue;
@@ -51,18 +48,17 @@ abstract class StepapoEntity extends Entity implements Injectable
 			} elseif (!$property->wrapper) {
 				$data->$name = $this->$name;
 			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
-				$data->$name = $this->shouldGetData($p) ? $this->$name?->getData($neon, $forCache) : $this->$name?->getPersistedId();
+				$data->$name = $p->getAttributes(Type::class) ? $this->$name?->getData($forCache) : $this->$name?->getPersistedId();
 			} elseif ($property->wrapper === OneHasMany::class) {
 				foreach ($this->$name as $related) {
-					$relatedData = $related->getData($neon, $forCache);
+					$relatedData = $related->getData($forCache);
 					$keyProperty = $relatedData::getKeyProperty();
 					if ($keyProperty && $related->$keyProperty instanceof StepapoEntity) {
 						$id = $related->$keyProperty->getPersistedId();
 					} else {
 						$id = $related->getPersistedId();
 					}
-					$data->$name[$id] = $related->getData($neon, $forCache);
-//					$data->$name[$keyProperty ? $relatedData->$keyProperty : $related->getPersistedId()] = $related->getData($neon, $forCache);
+					$data->$name[$id] = $p->getAttributes(ArrayOfType::class) ? $related->getData($forCache) : $id;
 				}
 			} elseif ($property->wrapper === ManyHasMany::class) {
 				foreach ($this->$name as $related) {
@@ -86,20 +82,20 @@ abstract class StepapoEntity extends Entity implements Injectable
 	}
 
 
-	/**
-	 * @throws ReflectionException
-	 */
-	private function shouldGetData(ReflectionProperty $property): bool
-	{
-		$types = Type::fromReflection($property)->getTypes();
-		foreach ($types as $type) {
-			if (!$type->isClass()) {
-				continue;
-			}
-			if ((new ReflectionClass($type->getSingleName()))->isSubclassOf(Item::class)) {
-				return true;
-			}
-		}
-		return false;
-	}
+//	/**
+//	 * @throws ReflectionException
+//	 */
+//	private function shouldGetData(ReflectionProperty $property): bool
+//	{
+//		$types = Type::fromReflection($property)->getTypes();
+//		foreach ($types as $type) {
+//			if (!$type->isClass()) {
+//				continue;
+//			}
+//			if ((new ReflectionClass($type->getSingleName()))->isSubclassOf(Item::class)) {
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
 }

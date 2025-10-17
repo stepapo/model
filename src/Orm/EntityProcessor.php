@@ -36,7 +36,6 @@ class EntityProcessor
 		private bool $skipDefaults,
 		private IModel $model,
 		private bool $fromNeon = false,
-		private bool $isRelated = false,
 	) {}
 
 
@@ -139,7 +138,7 @@ class EntityProcessor
 			}
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name/*, $this->entity*/) : null;
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon, true);
+			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
 			$processor->processEntity();
 			if ($processor->isModified) {
 				$this->isModified = $processor->isModified;
@@ -216,7 +215,7 @@ class EntityProcessor
 				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
 //			}
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon, true);
+			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
 			if ($processor->isModified) {
 				$this->isModified = $processor->isModified;

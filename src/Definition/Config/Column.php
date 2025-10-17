@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Definition\Config;
 
+use Nextras\Dbal\Utils\DateTimeImmutable;
 use Nextras\Orm\StorageReflection\StringHelper;
 use Stepapo\Utils\Attribute\KeyProperty;
 use Stepapo\Utils\Attribute\SkipInComparison;
@@ -19,7 +20,13 @@ class Column extends Config
 	#[SkipInComparison] public bool $private = false;
 	#[SkipInComparison] public bool $internal = false;
 	public mixed $default = null;
+	public mixed $dataDefault = null;
 	public ?string $onUpdate = null;
+	public bool $keyProperty = false;
+	public bool $valueProperty = false;
+	public bool $dontCache = false;
+	public bool $skipInManipulation = false;
+	public bool $showData = false;
 
 
 	public function getPhpName(?Foreign $foreign = null): string
@@ -29,6 +36,21 @@ class Column extends Config
 
 
 	public function getPhpType(?Foreign $foreign = null): string
+	{
+		return $foreign ? $foreign->getPhpTable() : match($this->type) {
+			'bool' => 'bool',
+			'int' => 'int',
+			'bigint' => 'int',
+			'string' => 'string',
+			'text' => 'string',
+			'datetime' => 'DateTimeImmutable',
+			'float' => 'float',
+			'fulltext' => 'string',
+		};
+	}
+
+
+	public function getNextrasType(?Foreign $foreign = null): string
 	{
 		return ($foreign
 			? $foreign->getPhpTable()
