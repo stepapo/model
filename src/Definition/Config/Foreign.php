@@ -6,6 +6,7 @@ namespace Stepapo\Model\Definition\Config;
 
 use Nextras\Orm\StorageReflection\StringHelper;
 use Stepapo\Utils\Attribute\KeyProperty;
+use Stepapo\Utils\Attribute\SkipInComparison;
 use Stepapo\Utils\Config;
 
 
@@ -20,8 +21,8 @@ class Foreign extends Config
 	public string $onUpdate = 'cascade';
 	public ?string $reverseName = null;
 	public ?string $reverseOrder = null;
-	public bool $reverseSkipInManipulation = false;
-	public bool $reverseDontCache = false;
+	#[SkipInComparison] public bool $reverseSkipInManipulation = false;
+	#[SkipInComparison] public bool $reverseDontCache = false;
 
 
 	public function process(string $tableName)
@@ -35,5 +36,11 @@ class Foreign extends Config
 	public function getPhpTable(): string
 	{
 		return ucfirst(StringHelper::camelize($this->table));
+	}
+
+
+	public function getPhpSchema(): ?string
+	{
+		return $this->schema ? ucfirst(StringHelper::camelize($this->schema)) : null;
 	}
 }

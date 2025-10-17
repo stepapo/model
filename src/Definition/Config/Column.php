@@ -17,16 +17,16 @@ class Column extends Config
 	public string $type;
 	public bool $null;
 	public bool $auto = false;
+	public mixed $default = null;
+	public ?string $onUpdate = null;
 	#[SkipInComparison] public bool $private = false;
 	#[SkipInComparison] public bool $internal = false;
-	public mixed $default = null;
-	public mixed $dataDefault = null;
-	public ?string $onUpdate = null;
-	public bool $keyProperty = false;
-	public bool $valueProperty = false;
-	public bool $dontCache = false;
-	public bool $skipInManipulation = false;
-	public bool $showData = false;
+	#[SkipInComparison] public mixed $dataDefault = null;
+	#[SkipInComparison] public bool $keyProperty = false;
+	#[SkipInComparison] public bool $valueProperty = false;
+	#[SkipInComparison] public bool $dontCache = false;
+	#[SkipInComparison] public bool $skipInManipulation = false;
+	#[SkipInComparison] public bool $showData = false;
 
 
 	public function getPhpName(?Foreign $foreign = null): string
