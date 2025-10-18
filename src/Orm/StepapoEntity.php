@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Orm;
 
+use Build\Model\File\File;
 use Nette\NotSupportedException;
 use Nextras\Orm\Entity\Entity;
 use Nextras\Orm\Relationships\ManyHasMany;
@@ -15,8 +16,10 @@ use ReflectionException;
 use Stepapo\Model\Data\Item;
 use Stepapo\Utils\Attribute\ArrayOfType;
 use Stepapo\Utils\Attribute\DontCache;
+use Stepapo\Utils\Attribute\SkipInManipulation;
 use Stepapo\Utils\Attribute\Type;
 use Stepapo\Utils\Injectable;
+use Tracy\Dumper;
 
 
 abstract class StepapoEntity extends Entity implements Injectable
@@ -31,7 +34,7 @@ abstract class StepapoEntity extends Entity implements Injectable
 	 * @throws NotSupportedException
 	 * @throws ReflectionException
 	 */
-	public function getData(bool $forCache = false): Item
+	public function getData(bool $neon = false, bool $forCache = false): Item
 	{
 		if (!method_exists($this, 'getDataClass')) {
 			throw new NotSupportedException('Entity does not have data class defined.');
@@ -45,20 +48,22 @@ abstract class StepapoEntity extends Entity implements Injectable
 				continue;
 			} elseif ($forCache && $p->getAttributes(DontCache::class)) {
 				continue;
+			} elseif ($neon && $p->getAttributes(SkipInManipulation::class)) {
+				continue;
 			} elseif (!$property->wrapper) {
 				$data->$name = $this->$name;
 			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
-				$data->$name = $p->getAttributes(Type::class) ? $this->$name?->getData($forCache) : $this->$name?->getPersistedId();
+				$data->$name = $p->getAttributes(Type::class) ? $this->$name?->getData($neon, $forCache) : $this->$name?->getPersistedId();
 			} elseif ($property->wrapper === OneHasMany::class) {
 				foreach ($this->$name as $related) {
-					$relatedData = $related->getData($forCache);
+					$relatedData = $related->getData($neon, $forCache);
 					$keyProperty = $relatedData::getKeyProperty();
 					if ($keyProperty && $related->$keyProperty instanceof StepapoEntity) {
 						$id = $related->$keyProperty->getPersistedId();
 					} else {
 						$id = $related->getPersistedId();
 					}
-					$data->$name[$id] = $p->getAttributes(ArrayOfType::class) ? $related->getData($forCache) : $id;
+					$data->$name[$id] = $p->getAttributes(ArrayOfType::class) ? $related->getData($neon, $forCache) : $id;
 				}
 			} elseif ($property->wrapper === ManyHasMany::class) {
 				foreach ($this->$name as $related) {

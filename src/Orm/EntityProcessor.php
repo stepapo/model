@@ -155,10 +155,10 @@ class EntityProcessor
 		}
 		if (
 			(isset($value) && (!isset($this->entity->$name) || $this->entity->$name !== $value))
-			|| ($value === null && $this->entity->$name !== null/* && !$this->entity instanceof PostProcessable*/)
+			|| (!isset($value) && $this->entity->$name !== null/* && !$this->entity instanceof PostProcessable*/)
 		) {
 			$this->modifiedValues->propertyList[$name] = ['old' => '', 'new' => $value?->getPersistedId()];
-			$this->entity->$name = $value;
+			$this->entity->$name = $value ?? null;
 		}
 	}
 
@@ -212,7 +212,7 @@ class EntityProcessor
 //			if (is_numeric($key)) {
 //				$relatedOriginal = $relatedRepository->getById($key);
 //			} else {
-				$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
+			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
 //			}
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
 			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
