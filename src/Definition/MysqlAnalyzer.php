@@ -235,8 +235,16 @@ class MysqlAnalyzer implements Analyzer
 			'bigint' => 'bigint',
 			'varchar' => 'string',
 			'text' => 'text',
+			'date' => 'datetime',
+			'enum' => 'string',
+			'char' => 'string',
+			'smallint' => 'int',
+			'mediumint' => 'int',
+			'datetime' => 'datetime',
 			'timestamp' => 'datetime',
+			'time' => 'datetime',
 			'float' => 'float',
+			'decimal' => 'float',
 		};
 	}
 

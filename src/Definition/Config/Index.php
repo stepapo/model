@@ -23,4 +23,10 @@ class Index extends Config
 			$this->name = $tableName . '_' . implode('_', $this->columns) . '_ix';
 		}
 	}
+
+	
+	public function __toString(): string
+	{
+		return count($this->columns) > 1 ? "[" . implode(', ', $this->columns) . "]" : $this->columns[0];
+	}
 }

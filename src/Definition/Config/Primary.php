@@ -12,4 +12,9 @@ use Stepapo\Utils\Config;
 class Primary extends Config
 {
 	/** @var string[] */ #[ValueProperty, ToArray] public array $columns;
+
+	public function __toString(): string
+	{
+		return count($this->columns) > 1 ? "[" . implode(', ', $this->columns) . "]" : $this->columns[0];
+	}
 }

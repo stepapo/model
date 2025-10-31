@@ -19,8 +19,9 @@ class Foreign extends Config
 	public string $column;
 	public string $onDelete = 'cascade';
 	public string $onUpdate = 'cascade';
-	public ?string $reverseName = null;
-	public ?string $reverseOrder = null;
+	#[SkipInComparison] public ?string $reverseName = null;
+	#[SkipInComparison] public ?string $reverseOrder = null;
+	#[SkipInComparison] public ?string $entity = null;
 	#[SkipInComparison] public bool $reverseSkipInManipulation = false;
 	#[SkipInComparison] public bool $reverseDontCache = false;
 
@@ -35,12 +36,30 @@ class Foreign extends Config
 
 	public function getPhpTable(): string
 	{
-		return ucfirst(StringHelper::camelize($this->table));
+		return $this->entity ?: ucfirst(StringHelper::camelize($this->table));
 	}
 
 
-	public function getPhpSchema(): ?string
+//	public function getPhpSchema(): ?string
+//	{
+//		return $this->schema ? ucfirst(StringHelper::camelize($this->schema)) : null;
+//	}
+
+
+	public function __toString(): string
 	{
-		return $this->schema ? ucfirst(StringHelper::camelize($this->schema)) : null;
+		$s = [];
+		if ($this->schema) {
+			$s[] = "schema: $this->schema";
+		}
+		$s[] = "table: $this->table";
+		$s[] = "column: $this->column";
+		if ($this->onDelete !== 'cascade') {
+			$s[] = "onDelete: $this->onDelete";
+		}
+		if ($this->onUpdate !== 'cascade') {
+			$s[] = "onUpdate: $this->onUpdate";
+		}
+		return "$this->keyColumn: [" . implode(', ', $s) . "]";
 	}
 }

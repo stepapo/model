@@ -9,6 +9,7 @@ use Nextras\Orm\StorageReflection\StringHelper;
 use Stepapo\Utils\Attribute\KeyProperty;
 use Stepapo\Utils\Attribute\SkipInComparison;
 use Stepapo\Utils\Config;
+use Tracy\Dumper;
 
 
 class Column extends Config
@@ -52,18 +53,7 @@ class Column extends Config
 
 	public function getNextrasType(?Foreign $foreign = null): string
 	{
-		return ($foreign
-			? $foreign->getPhpTable()
-			: match($this->type) {
-				'bool' => 'bool',
-				'int' => 'int',
-				'bigint' => 'int',
-				'string' => 'string',
-				'text' => 'string',
-				'datetime' => 'DateTimeImmutable',
-				'float' => 'float',
-				'fulltext' => 'string',
-			})
+		return ($foreign ? $foreign->getPhpTable() : $this->getPhpType($foreign))
 			. ($this->null ? '|null' : '')
 			. ($this->private ? '|PrivateProperty' : '')
 			. ($this->internal ? '|InternalProperty' : '');
@@ -77,9 +67,10 @@ class Column extends Config
 			'now' => 'now',
 			default => match($this->type) {
 				'bool' => match($this->default) {
+					1 => 'true',
 					true => 'true',
+					0 => 'false',
 					false => 'false',
-					default => $this->default,
 				},
 				'int' => (string) $this->default,
 				'bigint' => (string) $this->default,
@@ -87,5 +78,20 @@ class Column extends Config
 				default => "'$this->default'",
 			}
 		};
+	}
+	
+	
+	public function __toString(): string
+	{
+		$s = [];
+		$s[] = "type: $this->type";
+		$s[] = "null: " . ($this->null ? 'true' : 'false');
+		if ($this->default) {
+			$s[] = "default: $this->default";
+		}
+		if ($this->onUpdate) {
+			$s[] = "onUpdate: $this->onUpdate";
+		}
+		return "$this->name: [" . implode(', ', $s) . "]";
 	}
 }
