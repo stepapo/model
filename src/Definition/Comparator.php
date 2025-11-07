@@ -42,8 +42,6 @@ class Comparator implements Service
 					}
 				}
 				foreach ($table->foreignKeys as $foreignKey) {
-					$foreignKey->reverseName = null;
-					$foreignKey->reverseOrder = null;
 					if (!isset($oldTable->foreignKeys[$foreignKey->name])) {
 						$result['create'][$schema->name][$table->name]['foreignKeys'][] = $foreignKey->keyColumn;
 					} elseif (!$foreignKey->isSameAs($oldTable->foreignKeys[$foreignKey->name])) {
@@ -87,7 +85,7 @@ class Comparator implements Service
 					}
 				}
 				foreach ($table->foreignKeys as $foreignKey) {
-					if (!isset($newTable->foreignKeys[$foreignKey->keyColumn])) {
+					if (!isset($newTable->foreignKeys[$foreignKey->keyColumn]) || $newTable->foreignKeys[$foreignKey->keyColumn]->name !== $foreignKey->name) {
 						$result['remove'][$schema->name][$table->name]['foreignKeys'][] = $foreignKey->name;
 					}
 				}

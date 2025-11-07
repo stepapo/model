@@ -18,6 +18,7 @@ class Column extends Config
 	public string $type;
 	public bool $null;
 	public bool $auto = false;
+	public bool $unsigned = false;
 	public mixed $default = null;
 	public ?string $onUpdate = null;
 	#[SkipInComparison] public bool $private = false;
@@ -45,6 +46,7 @@ class Column extends Config
 			'string' => 'string',
 			'text' => 'string',
 			'datetime' => 'DateTimeImmutable',
+			'dateinterval' => '\DateInterval',
 			'float' => 'float',
 			'fulltext' => 'string',
 		};

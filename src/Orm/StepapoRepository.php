@@ -8,8 +8,10 @@ use Build\Model\Person\Person;
 use DateTimeInterface;
 use Nette\DI\Attributes\Inject;
 use Nette\Utils\Strings;
+use Nextras\Dbal\Drivers\Exception\QueryException;
 use Nextras\Orm\Collection\Functions\CollectionFunction;
 use Nextras\Orm\Entity\Entity;
+use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Mapper\IMapper;
 use Nextras\Orm\Repository\IDependencyProvider;
 use Nextras\Orm\Repository\Repository;
@@ -18,6 +20,7 @@ use ReflectionException;
 use Stepapo\Model\Data\Item;
 use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
 use Stepapo\Utils\Injectable;
+use Webovac\Core\Model\CmsEntity;
 
 
 abstract class StepapoRepository extends Repository implements Injectable
@@ -39,6 +42,15 @@ abstract class StepapoRepository extends Repository implements Injectable
 	}
 
 
+	public function create(): IEntity
+	{
+		$class = new ReflectionClass($this->getEntityClassName([]));
+		$entity = $class->newInstance();
+		$this->attach($entity);
+		return $entity;
+	}
+
+
 	public function createCollectionFunction(string $name): CollectionFunction
 	{
 		if (isset($this->functions[$name])) {
@@ -55,22 +67,14 @@ abstract class StepapoRepository extends Repository implements Injectable
 	public function createFromDataAndReturnResult(
 		Item $data,
 		?StepapoEntity $original = null,
-		?StepapoEntity $parent = null,
-		?string $parentName = null,
 		?Person $person = null,
 		?DateTimeInterface $date = null,
-		bool $skipDefaults = false,
-		bool $getOriginalByData = false,
 		bool $fromNeon = false,
 	): EntityProcessorResult
 	{
-		if ($getOriginalByData) {
-			$original ??= method_exists($this, 'getByData') ? $this->getByData($data, $parent) : null;
-		}
-		$class = new ReflectionClass($this->getEntityClassName([]));
-		$entity = $original ?: $class->newInstance();
-		$processor = new EntityProcessor($entity, $data, $person, $date, $skipDefaults, $this->getModel(), $fromNeon);
-		return $processor->processEntity($parent, $parentName);
+		$entity = $original ?: $this->create();
+		$processor = new EntityProcessor($entity, $data, $person, $date, $this->getModel(), $fromNeon);
+		return $processor->processEntity();
 	}
 
 
@@ -80,17 +84,31 @@ abstract class StepapoRepository extends Repository implements Injectable
 	public function createFromData(
 		Item $data,
 		?StepapoEntity $original = null,
-		?StepapoEntity $parent = null,
-		?string $parentName = null,
 		?Person $person = null,
 		?DateTimeInterface $date = null,
-		bool $skipDefaults = false,
-		bool $getOriginalByData = false,
 		bool $fromNeon = false,
 	): StepapoEntity
 	{
-		$result = $this->createFromDataAndReturnResult($data, $original, $parent, $parentName, $person, $date, $skipDefaults, $getOriginalByData, $fromNeon);
+		$result = $this->createFromDataAndReturnResult($data, $original, $person, $date, $fromNeon);
 		return $result->entity;
+	}
+
+
+	public function getById($id): ?CmsEntity
+	{
+		try {
+			return parent::getById($id);
+		} catch (QueryException $e) {
+			return null;
+		}
+	}
+
+
+	public function delete(CmsEntity $entity): void
+	{
+		$this->onBeforeRemove($entity);
+		$this->mapper->delete($entity);
+		$this->onAfterRemove($entity);
 	}
 
 

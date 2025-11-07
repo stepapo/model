@@ -15,6 +15,7 @@ use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
 use Stepapo\Utils\Printer;
+use Tracy\Dumper;
 
 
 class MysqlProcessor implements DbProcessor
@@ -28,14 +29,15 @@ class MysqlProcessor implements DbProcessor
 		'dropSequence' => [],
 		'dropTable' => [],
 		'dropIndex' => [],
+		'alterTableDropKey' => [],
+		'alterTableDropColumn' => [],
 		'createSchema' => [],
 		'createSequence' => [],
 		'createTable' => [],
 		'alterTable' => [],
 		'alterSequence' => [],
-		'alterTableDrop' => [],
-		'alterTableAdd' => [],
 		'createIndex' => [],
+		'alterTableAddKey' => [],
 	];
 
 
@@ -384,7 +386,7 @@ class MysqlProcessor implements DbProcessor
 	private function removeColumn(Schema $schema, Table $table, Column $column): void
 	{
 		$this->addQuery(new Query(
-			'alterTableDrop',
+			'alterTableDropColumn',
 			"ALTER TABLE `$schema->name`.`$table->name` DROP COLUMN `$column->name`",
 			"$schema->name.$table->name",
 			'removing column',
@@ -408,7 +410,7 @@ class MysqlProcessor implements DbProcessor
 	private function createUnique(Schema $schema, Table $table, Unique $unique): void
 	{
 		$this->addQuery(new Query(
-			'alterTableAdd',
+			'alterTableAddKey',
 			"ALTER TABLE `$schema->name`.`$table->name` ADD " . $this->unique($unique),
 			"$schema->name.$table->name",
 			'creating unique key',
@@ -420,7 +422,7 @@ class MysqlProcessor implements DbProcessor
 	private function removeUnique(Schema $schema, Table $table, Unique $unique): void
 	{
 		$this->addQuery(new Query(
-			'alterTableDrop',
+			'alterTableDropKey',
 			"ALTER TABLE `$schema->name`.`$table->name` DROP CONSTRAINT `$unique->name`",
 			"$schema->name.$table->name",
 			'removing unique key',
@@ -439,7 +441,7 @@ class MysqlProcessor implements DbProcessor
 	private function createForeign(Schema $schema, Table $table, Foreign $foreignKey): void
 	{
 		$this->addQuery(new Query(
-			'alterTableAdd',
+			'alterTableAddKey',
 			"ALTER TABLE `$schema->name`.`$table->name` ADD CONSTRAINT " . $this->foreign($foreignKey),
 			"$schema->name.$table->name",
 			'creating foreign key',
@@ -451,7 +453,7 @@ class MysqlProcessor implements DbProcessor
 	private function removeForeign(Schema $schema, Table $table, Foreign $foreignKey): void
 	{
 		$this->addQuery(new Query(
-			'alterTableDrop',
+			'alterTableDropKey',
 			"ALTER TABLE `$schema->name`.`$table->name` DROP CONSTRAINT `$foreignKey->name`",
 			"$schema->name.$table->name",
 			'removing foreign key',
@@ -532,6 +534,7 @@ class MysqlProcessor implements DbProcessor
 			'string' => 'varchar(255)',
 			'text' => 'text',
 			'datetime' => 'timestamp',
+			'dateinterval' => 'time',
 			'float' => 'float',
 			'fulltext' => 'text',
 		};

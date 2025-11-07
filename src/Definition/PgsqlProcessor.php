@@ -579,6 +579,7 @@ class PgsqlProcessor implements DbProcessor
 			'string' => 'varchar',
 			'text' => 'text',
 			'datetime' => 'timestamp',
+			'dateinterval' => 'timestamp',
 			'float' => 'numeric',
 			'fulltext' => 'tsvector',
 		};

@@ -14,6 +14,7 @@ use Stepapo\Model\Definition\Config\Primary;
 use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
+use Tracy\Dumper;
 
 
 class MysqlAnalyzer implements Analyzer
@@ -45,6 +46,7 @@ class MysqlAnalyzer implements Analyzer
 					$column->default = $c->is_primary ? null : $this->getDefault($c->default, $type);
 					$column->null = $c->is_nullable === 1;
 					$column->auto = $c->is_autoincrement === 1;
+					$column->unsigned = $c->is_unsigned === 1;
 					$table->columns[$c->name] = $column;
 				}
 				foreach ($this->getForeignKeys($s, $t->name) as $f) {
@@ -108,14 +110,15 @@ class MysqlAnalyzer implements Analyzer
 				COLUMN_NAME AS name,
 				DATA_TYPE AS `type`,
 				COLUMN_DEFAULT as `default`,
-				IF(COLUMN_KEY='PRI',1,0) AS is_primary,
-				IF(EXTRA='auto_increment',1,0) AS is_autoincrement,
-				IF(IS_NULLABLE='YES',1,0) AS is_nullable
+				IF(COLUMN_KEY='PRI', 1, 0) AS is_primary,
+				IF(EXTRA='auto_increment', 1, 0) AS is_autoincrement,
+				IF(IS_NULLABLE='YES', 1, 0) AS is_nullable,
+				IF(COLUMN_TYPE LIKE %_like, 1, 0) AS is_unsigned
 			FROM information_schema.COLUMNS
 			WHERE TABLE_SCHEMA = %s
 			AND TABLE_NAME = %s
 			ORDER BY COLUMN_NAME
-		", $schema, $table)->fetchAll();
+		", 'unsigned', $schema, $table)->fetchAll();
 	}
 
 
@@ -242,7 +245,7 @@ class MysqlAnalyzer implements Analyzer
 			'mediumint' => 'int',
 			'datetime' => 'datetime',
 			'timestamp' => 'datetime',
-			'time' => 'datetime',
+			'time' => 'dateinterval',
 			'float' => 'float',
 			'decimal' => 'float',
 		};

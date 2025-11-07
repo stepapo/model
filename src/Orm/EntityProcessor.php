@@ -23,6 +23,11 @@ use Stepapo\Utils\Attribute\SkipInManipulation;
 
 class EntityProcessor
 {
+	private const string CREATED_AT = 'createdAt';
+	private const string UPDATED_AT = 'updatedAt';
+	private const string CREATED_BY_PERSON = 'createdByPerson';
+	private const string UPDATED_BY_PERSON = 'updatedByPerson';
+
 	public bool $isPersisted = false;
 	public bool $isModified = false;
 	public DiffList $modifiedValues;
@@ -33,7 +38,6 @@ class EntityProcessor
 		private Item $data,
 		private ?Person $person,
 		private ?DateTimeInterface $date,
-		private bool $skipDefaults,
 		private IModel $model,
 		private bool $fromNeon = false,
 	) {}
@@ -50,7 +54,7 @@ class EntityProcessor
 		}
 		$class = new ReflectionClass($this->entity->getDataClass());
 		foreach ($this->data as $name => $value) {
-			if (in_array($name, ['createdAt', 'updatedAt', 'createdByPerson', 'updatedByPerson', $parentName], true)) {
+			if (in_array($name, [self::CREATED_AT, self::UPDATED_AT, self::CREATED_BY_PERSON, self::UPDATED_BY_PERSON, $parentName], true)) {
 				continue;
 			}
 			$dataProperty = $class->getProperty($name);
@@ -71,8 +75,8 @@ class EntityProcessor
 		$this->isModified = $this->isModified || $this->entity->isModified();
 		$this->isPersisted = $this->entity->isPersisted();
 		if (!$this->isPersisted) {
-			if ($metadata->hasProperty('createdByPerson')) {
-				$this->entity->createdByPerson = $this->person;
+			if ($metadata->hasProperty(self::CREATED_BY_PERSON)) {
+				$this->entity->{self::CREATED_BY_PERSON} = $this->person;
 			}
 			$this->model->persist($this->entity);
 		}
@@ -89,11 +93,11 @@ class EntityProcessor
 			}
 		}
 		if ($this->isPersisted && $this->isModified) {
-			if ($metadata->hasProperty('updatedByPerson')) {
-				$this->entity->updatedByPerson = $this->person;
+			if ($metadata->hasProperty(self::UPDATED_BY_PERSON)) {
+				$this->entity->{self::UPDATED_BY_PERSON} = $this->person;
 			}
-			if ($metadata->hasProperty('updatedAt')) {
-				$this->entity->updatedAt = $this->date;
+			if ($metadata->hasProperty(self::UPDATED_AT)) {
+				$this->entity->{self::UPDATED_AT} = $this->date;
 			}
 			// kvůli indexu při změně translation:
 			if ($this->isModified && !$this->entity->isModified()) {
@@ -138,7 +142,7 @@ class EntityProcessor
 			}
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name/*, $this->entity*/) : null;
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
+			$processor = new self($relatedEntity, $this->data->$name, $this->person, $this->date, $this->model, $this->fromNeon);
 			$processor->processEntity();
 			if ($processor->isModified) {
 				$this->isModified = $processor->isModified;
@@ -215,7 +219,7 @@ class EntityProcessor
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
 //			}
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
-			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->skipDefaults, $this->model, $this->fromNeon);
+			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->model, $this->fromNeon);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
 			if ($processor->isModified) {
 				$this->isModified = $processor->isModified;
@@ -224,14 +228,12 @@ class EntityProcessor
 			}
 			$ids[] = $relatedEntity->getPersistedId();
 		}
-		if (!$this->skipDefaults) {
-			foreach ($this->entity->$name as $related) {
-				if (!in_array($related->getPersistedId(), $ids, true)) {
-					$this->isModified = true;
-					$this->modifiedValues->propertyList[$name] ??= new DiffList;
-					$this->modifiedValues->propertyList[$name]->propertyList['removedCount'] = ($this->modifiedValues->propertyList[$name]->propertyList['removedCount'] ?? 0) + 1;
-					$relatedRepository->delete($related);
-				}
+		foreach ($this->entity->$name as $related) {
+			if (!in_array($related->getPersistedId(), $ids, true)) {
+				$this->isModified = true;
+				$this->modifiedValues->propertyList[$name] ??= new DiffList;
+				$this->modifiedValues->propertyList[$name]->propertyList['removedCount'] = ($this->modifiedValues->propertyList[$name]->propertyList['removedCount'] ?? 0) + 1;
+				$relatedRepository->delete($related);
 			}
 		}
 	}
