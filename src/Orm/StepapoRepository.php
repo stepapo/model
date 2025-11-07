@@ -94,7 +94,7 @@ abstract class StepapoRepository extends Repository implements Injectable
 	}
 
 
-	public function getById($id): ?CmsEntity
+	public function getById($id): ?StepapoEntity
 	{
 		try {
 			return parent::getById($id);
@@ -104,7 +104,7 @@ abstract class StepapoRepository extends Repository implements Injectable
 	}
 
 
-	public function delete(CmsEntity $entity): void
+	public function delete(StepapoEntity $entity): void
 	{
 		$this->onBeforeRemove($entity);
 		$this->mapper->delete($entity);

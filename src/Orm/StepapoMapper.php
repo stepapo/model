@@ -21,7 +21,7 @@ abstract class StepapoMapper extends DbalMapper
 	}
 
 
-	public function delete(CmsEntity $entity): void
+	public function delete(StepapoEntity $entity): void
 	{
 		$this->connection->query('DELETE FROM %table WHERE id = %i', $this->getTableName(), $entity->getPersistedId());
 	}
