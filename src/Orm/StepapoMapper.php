@@ -7,7 +7,6 @@ namespace Stepapo\Model\Orm;
 use Nextras\Orm\Mapper\Dbal\Conventions\Conventions;
 use Nextras\Orm\Mapper\Dbal\Conventions\IConventions;
 use Nextras\Orm\Mapper\Dbal\DbalMapper;
-use Webovac\Core\Model\CmsEntity;
 
 
 abstract class StepapoMapper extends DbalMapper

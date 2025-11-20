@@ -20,7 +20,6 @@ use ReflectionException;
 use Stepapo\Model\Data\Item;
 use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
 use Stepapo\Utils\Injectable;
-use Webovac\Core\Model\CmsEntity;
 
 
 abstract class StepapoRepository extends Repository implements Injectable

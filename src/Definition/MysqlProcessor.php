@@ -70,6 +70,7 @@ class MysqlProcessor implements DbProcessor
 		$this->oldDefinition = $this->analyzer->getDefinition($this->schemas);
 		$this->prepare();
 		$count = 0;
+		$this->dbal->query("SET FOREIGN_KEY_CHECKS = %i", 0);
 		try {
 			/** @var Query[] $queries */
 			foreach ($this->steps as $queries) {
@@ -102,7 +103,7 @@ class MysqlProcessor implements DbProcessor
 			$this->printer->printLine($e->getMessage());
 			$this->printer->printLine($e->getTraceAsString());
 		}
-
+		$this->dbal->query("SET FOREIGN_KEY_CHECKS = %i", 1);
 		return $count;
 	}
 
