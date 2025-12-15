@@ -66,10 +66,11 @@ class PgsqlAnalyzer implements Analyzer
 				}
 				$p = $this->getPrimaryKey((int) $t->id);
 				foreach ($this->getIndexes((int) $t->id) as $i) {
+					$name = str_replace($schema->name . '.', '', $i->name);
 					$index = new Index;
-					$index->name = $i->name;
+					$index->name = $name;
 					$index->columns = $this->getKeyColumns((int) $i->id);
-					$table->indexes[$i->name] = $index;
+					$table->indexes[$name] = $index;
 				}
 				$primary = new Primary;
 				$primary->columns = $this->getKeyColumns((int) $p->id);
@@ -229,10 +230,13 @@ class PgsqlAnalyzer implements Analyzer
 		$type = strtolower($type);
 		return match($type) {
 			'bool' => 'bool',
+			'int2' => 'int',
 			'int4' => 'int',
 			'int8' => 'bigint',
 			'varchar' => 'string',
 			'text' => 'text',
+			'time' => 'dateinterval',
+			'interval' => 'dateinterval',
 			'timestamp' => 'datetime',
 			'numeric' => 'float',
 			'tsvector' => 'fulltext',

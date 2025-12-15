@@ -7,7 +7,9 @@ namespace Stepapo\Model\Definition;
 use Nette\InvalidArgumentException;
 use Nette\Utils\FileInfo;
 use Nette\Utils\Finder;
+use Stepapo\Model\Definition\Config\Column;
 use Stepapo\Model\Definition\Config\Definition;
+use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Utils\Service;
 
 
@@ -88,7 +90,30 @@ class Collector implements Service
 		ksort($mergedDefinition->schemas);
 		foreach ($mergedDefinition->schemas as $schema) {
 			ksort($mergedDefinition->schemas[$schema->name]->tables);
+			foreach ($schema->tables as $table) {
+				/*$mergedDefinition->schemas[$schema->name]->tables[$table->name] = */$this->sortColumns($table);
+			}
 		}
 		return $mergedDefinition;
+	}
+
+
+	private function sortColumns(Table $table): void
+	{
+		uasort($table->columns, function (Column $a, Column $b) use ($table) {
+			if (
+				[in_array($b->name, $table->primaryKey?->columns ?: [], true), array_key_exists($b->name, $table->foreignKeys), in_array($a->name, ['created_by_person_id', 'updated_by_person_id'], true), in_array($a->name, ['created_at', 'updated_at'], true), $a->type === 'datetime', $a->type === 'dateinterval']
+				===
+				[in_array($a->name, $table->primaryKey?->columns ?: [], true), array_key_exists($a->name, $table->foreignKeys), in_array($b->name, ['created_by_person_id', 'updated_by_person_id'], true), in_array($b->name, ['created_at', 'updated_at'], true), $b->type === 'datetime', $b->type === 'dateinterval']
+			) {
+				if ($a->type === $b->type) {
+					return strcmp($a->name, $b->name);
+				}
+				return strcmp($a->type, $b->type);
+			}
+			return [in_array($b->name, $table->primaryKey?->columns ?: [], true), array_key_exists($b->name, $table->foreignKeys), in_array($a->name, ['created_by_person_id', 'updated_by_person_id'], true), in_array($a->name, ['created_at', 'updated_at'], true), $a->type === 'datetime', $a->type === 'dateinterval']
+				<=>
+				[in_array($a->name, $table->primaryKey?->columns ?: [], true), array_key_exists($a->name, $table->foreignKeys), in_array($b->name, ['created_by_person_id', 'updated_by_person_id'], true), in_array($b->name, ['created_at', 'updated_at'], true), $b->type === 'datetime', $b->type === 'dateinterval'];
+		});
 	}
 }

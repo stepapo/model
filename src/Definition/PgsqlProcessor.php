@@ -15,6 +15,7 @@ use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
 use Stepapo\Utils\Printer;
+use Tracy\Dumper;
 
 
 class PgsqlProcessor implements DbProcessor
@@ -242,7 +243,7 @@ class PgsqlProcessor implements DbProcessor
 		$this->removeSequence($schema, $table);
 		$this->addQuery(new Query(
 			'createSequence',
-			"CREATE SEQUENCE \"{$table->name}_id_seq\"",
+			"CREATE SEQUENCE \"{$schema->name}\".\"{$table->name}_id_seq\"",
 		));
 	}
 
@@ -251,7 +252,7 @@ class PgsqlProcessor implements DbProcessor
 	{
 		$this->addQuery(new Query(
 			'alterSequence',
-			"ALTER SEQUENCE \"{$table->name}_id_seq\" OWNED BY \"{$table->name}\".\"{$column->name}\"",
+			"ALTER SEQUENCE \"{$schema->name}\".\"{$table->name}_id_seq\" OWNED BY \"{$schema->name}\".\"{$table->name}\".\"{$column->name}\"",
 		));
 	}
 
@@ -360,7 +361,7 @@ class PgsqlProcessor implements DbProcessor
 	{
 		$this->addQuery(new Query(
 			'dropIndex',
-			"DROP INDEX \"$schema->name\".\"$index->name\"",
+			"DROP INDEX IF EXISTS \"$schema->name\".\"$index->name\"",
 			"$schema->name.$table->name",
 			'removing index',
 			$index->name,
@@ -510,7 +511,7 @@ class PgsqlProcessor implements DbProcessor
 		if ($column->auto) {
 			$this->createSequence($schema, $table);
 			$this->alterSequence($schema, $table, $column);
-			$c['auto'] = "DEFAULT nextval('{$table->name}_id_seq'::regclass)";
+			$c['auto'] = "DEFAULT nextval('{$schema->name}.{$table->name}_id_seq'::regclass)";
 		}
 		return implode(' ', $c);
 	}
@@ -519,7 +520,12 @@ class PgsqlProcessor implements DbProcessor
 	private function alterColumn(Table $table, Column $column): string
 	{
 		$c = [];
-		$c['type'] = "ALTER COLUMN \"$column->name\" TYPE " . $this->getType($column->type);
+		if ($this->getType($column->type) === 'bool') {
+			$c['dropdefault'] = "ALTER COLUMN \"$column->name\" DROP DEFAULT";
+			$c['type'] = "ALTER COLUMN \"$column->name\" TYPE " . $this->getType($column->type) . " USING \"$column->name\"::int::bool";
+		} else {
+			$c['type'] = "ALTER COLUMN \"$column->name\" TYPE " . $this->getType($column->type);
+		}
 		if (!$column->null) {
 			$c['null'] = "ALTER COLUMN \"$column->name\" SET NOT NULL";
 		} else {
@@ -574,14 +580,16 @@ class PgsqlProcessor implements DbProcessor
 	{
 		return match($type) {
 			'bool' => 'bool',
+//			'bool' => 'int2',
 			'int' => 'int4',
 			'bigint' => 'int8',
 			'string' => 'varchar',
 			'text' => 'text',
 			'datetime' => 'timestamp',
-			'dateinterval' => 'timestamp',
+			'dateinterval' => 'interval',
 			'float' => 'numeric',
-			'fulltext' => 'tsvector',
+//			'fulltext' => 'tsvector',
+			'fulltext' => 'text',
 		};
 	}
 
@@ -596,6 +604,7 @@ class PgsqlProcessor implements DbProcessor
 					false => 'false',
 					default => $default,
 				},
+//				'bool' => $default ? 1 : 0,
 				'int' => $default,
 				'bigint' => $default,
 				'string' => "'$default'",

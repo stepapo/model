@@ -83,7 +83,7 @@ abstract class StepapoEntity extends Entity implements Injectable
 		if (!$this->getMetadata()->hasProperty('title')) {
 			throw new NotSupportedException;
 		}
-		return $this->title;
+		return $this->title ?: '';
 	}
 
 

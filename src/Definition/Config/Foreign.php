@@ -22,6 +22,7 @@ class Foreign extends Config
 	#[SkipInComparison] public ?string $reverseName = null;
 	#[SkipInComparison] public ?string $reverseOrder = null;
 	#[SkipInComparison] public ?string $entity = null;
+	#[SkipInComparison] public bool $reverseData = false;
 	#[SkipInComparison] public bool $reverseSkipInManipulation = false;
 	#[SkipInComparison] public bool $reverseDontCache = false;
 

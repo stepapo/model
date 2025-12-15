@@ -75,6 +75,7 @@ class Processor implements Service
 									$count++;
 									$this->printer->printOk();
 								}
+								$this->orm->flush();
 							}
 						}
 					}
