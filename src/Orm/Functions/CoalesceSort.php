@@ -27,6 +27,6 @@ class CoalesceSort extends StepapoOrmFunction
 			$columns[] = $column;
 		}
 		$expression .= implode(', ', $placeholders) . ')';
-		return $this->reateDbalExpression($expression, $values, $columns, $aggregator);
+		return $this->createDbalExpression($expression, $values, $columns, $aggregator);
 	}
 }
