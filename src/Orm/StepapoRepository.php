@@ -44,7 +44,6 @@ abstract class StepapoRepository extends Repository implements Injectable
 	public function create(): IEntity
 	{
 		$class = new ReflectionClass($this->getEntityClassName([]));
-		$this->create();
 		$entity = $class->newInstance();
 		$this->attach($entity);
 		return $entity;
