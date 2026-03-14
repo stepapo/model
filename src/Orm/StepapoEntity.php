@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Stepapo\Model\Orm;
 
-use Build\Model\File\File;
 use Nette\NotSupportedException;
 use Nextras\Orm\Entity\Entity;
 use Nextras\Orm\Relationships\ManyHasMany;
@@ -19,7 +18,6 @@ use Stepapo\Utils\Attribute\DontCache;
 use Stepapo\Utils\Attribute\SkipInManipulation;
 use Stepapo\Utils\Attribute\Type;
 use Stepapo\Utils\Injectable;
-use Tracy\Dumper;
 
 
 abstract class StepapoEntity extends Entity implements Injectable
