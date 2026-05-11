@@ -17,6 +17,7 @@ use Webovac\Core\Lib\CmsCache;
 abstract class DataRepository implements Service, Injectable
 {
 	/** @var Collection<Item> */ protected Collection $collection;
+	/** @var Collection<Item> */ protected Collection $loadedCollection;
 	protected Cache $cache;
 
 
@@ -35,7 +36,7 @@ abstract class DataRepository implements Service, Injectable
 		$array = [];
 		foreach ($keys as $key) {
 			$this->addItemToCollection($key);
-			$array[] = $this->collection[$key];
+			$array[] = $this->loadedCollection[$key];
 		}
 		return new Collection($array);
 	}
@@ -44,19 +45,22 @@ abstract class DataRepository implements Service, Injectable
 	public function getByKey(mixed $key): ?Item
 	{
 		$this->addItemToCollection($key);
-		return $this->collection[$key];
+		return $this->loadedCollection[$key];
 	}
 
 
 	public function buildCache(): void
 	{
 		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
+		$collection = new Collection;
 		foreach ($this->getOrmRepository()->findAll() as $entity) {
 			$key = $this->getIdentifier($entity);
 			$item = $entity->getData(forCache: true);
 			$this->cacheItem($key, $item);
-			$this->addItemToCollection($key, $item);
+			$collection[$key] = $item;
 		}
+		$this->collection = $collection;
+		$this->cache->save('collection', $collection, [Cache::Tags => lcfirst($this->getName())]);
 		$this->setReady();
 	}
 
@@ -86,7 +90,10 @@ abstract class DataRepository implements Service, Injectable
 	public function getCollection(): Collection
 	{
 		if (!isset($this->collection)) {
-			$this->buildCache();
+			$this->collection = $this->cache->load('collection', function() {
+				$this->buildCache();
+				return $this->collection;
+			}, [Cache::Tags => lcfirst($this->getName())]);
 		}
 		return $this->collection;
 	}
@@ -104,19 +111,17 @@ abstract class DataRepository implements Service, Injectable
 
 	protected function addItemToCollection(mixed $key, ?Item $item = null): void
 	{
-		if (!isset($this->collection) || !array_key_exists($key, (array) $this->collection)) {
+		if (!isset($this->loadedCollection) || !array_key_exists($key, (array) $this->loadedCollection)) {
 			$item ??= $this->cache->load(lcfirst($this->getName()) . "/$key");
-			if (!$item) {
-				if (!$this->isReady()) {
-					$this->buildCache();
-				}
+			if (!$item && !$this->isReady()) {
+				$this->buildCache();
 				$item = $this->collection[$key] ?? null;
 			}
-			if (!isset($this->collection)) {
-				$this->collection = new Collection;
+			if (!isset($this->loadedCollection)) {
+				$this->loadedCollection = new Collection;
 			}
-			if (!array_key_exists($key, (array) $this->collection)) {
-				$this->collection[$key] = $item;
+			if (!array_key_exists($key, (array) $this->loadedCollection)) {
+				$this->loadedCollection[$key] = $item;
 			}
 		}
 	}

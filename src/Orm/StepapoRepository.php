@@ -69,10 +69,11 @@ abstract class StepapoRepository extends Repository implements Injectable
 		?Person $person = null,
 		?DateTimeInterface $date = null,
 		bool $fromNeon = false,
+		string $namespace = 'cms',
 	): EntityProcessorResult
 	{
 		$entity = $original ?: $this->create();
-		$processor = new EntityProcessor($entity, $data, $person, $date, $this->getModel(), $fromNeon);
+		$processor = new EntityProcessor($entity, $data, $person, $date, $this->getModel(), $fromNeon, $namespace);
 		return $processor->processEntity();
 	}
 
@@ -86,9 +87,10 @@ abstract class StepapoRepository extends Repository implements Injectable
 		?Person $person = null,
 		?DateTimeInterface $date = null,
 		bool $fromNeon = false,
+		string $namespace = 'cms',
 	): StepapoEntity
 	{
-		$result = $this->createFromDataAndReturnResult($data, $original, $person, $date, $fromNeon);
+		$result = $this->createFromDataAndReturnResult($data, $original, $person, $date, $fromNeon, $namespace);
 		return $result->entity;
 	}
 

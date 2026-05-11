@@ -8,7 +8,7 @@ use Build\Model\File\FileData;
 use Build\Model\File\FileRepository;
 use Build\Model\Person\Person;
 use DateTimeInterface;
-use Nextras\Dbal\Utils\DateTimeImmutable;
+use Nextras\Orm\Entity\PropertyWrapper\DateTimeWrapper;
 use Nextras\Orm\Entity\Reflection\PropertyMetadata;
 use Nextras\Orm\Model\IModel;
 use Nextras\Orm\Relationships\ManyHasMany;
@@ -40,6 +40,7 @@ class EntityProcessor
 		private ?DateTimeInterface $date,
 		private IModel $model,
 		private bool $fromNeon = false,
+		private string $namespace = 'cms',
 	) {}
 
 
@@ -64,7 +65,7 @@ class EntityProcessor
 			$property = $metadata->hasProperty($name) ? $metadata->getProperty($name) : null;
 			if (!$property || (!isset($this->data->$name) && $property->isPrimary)) {
 				continue;
-			} elseif (!$property->wrapper || $property->wrapper === DateTimeImmutable::class) {
+			} elseif (!$property->wrapper || $property->wrapper === DateTimeWrapper::class) {
 				$this->processScalar($property);
 			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
 				$this->processHasOne($property);
@@ -117,7 +118,7 @@ class EntityProcessor
 	{
 		$name = $property->name;
 		$value = $this->data->$name;
-		if ($property->wrapper === DateTimeImmutable::class) {
+		if ($property->wrapper === DateTimeWrapper::class) {
 			if ((empty($this->entity->$name) && (!empty($value) || $value === '0')) || $this->entity->$name != $value) {
 				$this->modifiedValues->propertyList[$name] = ['old' => empty($this->entity->$name) ? null : $this->entity->$name->format('Y-m-d H:i:s'), 'new' => $value->format('Y-m-d H:i:s')];
 				$this->entity->$name = $value;
@@ -138,7 +139,7 @@ class EntityProcessor
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
 		if ($this->data->$name instanceof Item) {
 			if ($this->data->$name instanceof FileData) {
-				$this->data->$name = $this->model->getRepository(FileRepository::class)->createFileData($this->data->$name);
+				$this->data->$name = $this->model->getRepository(FileRepository::class)->createFileData($this->data->$name, namespace: $this->namespace);
 			}
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($this->data->$name/*, $this->entity*/) : null;
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
@@ -208,7 +209,7 @@ class EntityProcessor
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
 		foreach ((array) $this->data->$name as $key => $relatedData) {
 			if ($relatedData instanceof FileData) {
-				$relatedData = $this->model->getRepository(FileRepository::class)->createFileData($relatedData, !is_numeric($key) ? $key : null);
+				$relatedData = $this->model->getRepository(FileRepository::class)->createFileData($relatedData, !is_numeric($key) ? $key : null, $this->namespace);
 				if (!$relatedData) {
 					continue;
 				}

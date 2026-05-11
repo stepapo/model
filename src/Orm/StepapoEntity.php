@@ -6,6 +6,7 @@ namespace Stepapo\Model\Orm;
 
 use Nette\NotSupportedException;
 use Nextras\Orm\Entity\Entity;
+use Nextras\Orm\Entity\PropertyWrapper\DateTimeWrapper;
 use Nextras\Orm\Relationships\ManyHasMany;
 use Nextras\Orm\Relationships\ManyHasOne;
 use Nextras\Orm\Relationships\OneHasMany;
@@ -48,7 +49,7 @@ abstract class StepapoEntity extends Entity implements Injectable
 				continue;
 			} elseif ($neon && $p->getAttributes(SkipInManipulation::class)) {
 				continue;
-			} elseif (!$property->wrapper) {
+			} elseif (!$property->wrapper || $property->wrapper === DateTimeWrapper::class) {
 				$data->$name = $this->$name;
 			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
 				$data->$name = $p->getAttributes(Type::class) ? $this->$name?->getData($neon, $forCache) : $this->$name?->getPersistedId();

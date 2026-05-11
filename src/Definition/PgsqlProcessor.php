@@ -239,10 +239,9 @@ class PgsqlProcessor implements DbProcessor
 
 	private function createSequence(Schema $schema, Table $table): void
 	{
-		$this->removeSequence($schema, $table);
 		$this->addQuery(new Query(
 			'createSequence',
-			"CREATE SEQUENCE \"{$schema->name}\".\"{$table->name}_id_seq\"",
+			"CREATE SEQUENCE IF NOT EXISTS \"{$schema->name}\".\"{$table->name}_id_seq\"",
 		));
 	}
 
@@ -498,6 +497,9 @@ class PgsqlProcessor implements DbProcessor
 
 	private function column(Schema $schema, Table $table, Column $column): string
 	{
+		if ($column->type === 'fulltext') {
+			$this->createFulltext($schema, $table, $column);
+		}
 		$c = [];
 		$c['name'] = "\"$column->name\"";
 		$c['type'] = $this->getType($column->type);
@@ -587,8 +589,8 @@ class PgsqlProcessor implements DbProcessor
 			'datetime' => 'timestamp',
 			'dateinterval' => 'interval',
 			'float' => 'numeric',
-//			'fulltext' => 'tsvector',
-			'fulltext' => 'text',
+			'fulltext' => 'tsvector',
+//			'fulltext' => 'text',
 		};
 	}
 

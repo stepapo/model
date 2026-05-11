@@ -94,7 +94,11 @@ class Collector implements Service
 	{
 		foreach ($two as $valueName => $value) {
 			if (is_array($value)) {
-				$one[$valueName] = $this->mergeItem($class, (string) $valueName, $one[$valueName] ?? [], $two[$valueName], $override);
+				if ($override && $valueName === 'tree' && isset($two[$valueName])) {
+					$one[$valueName] = $two[$valueName];
+				} else {
+					$one[$valueName] = $this->mergeItem($class, (string)$valueName, $one[$valueName] ?? [], $two[$valueName], $override);
+				}
 			} elseif (isset($one[$valueName]) && $one[$valueName] !== $two[$valueName]) {
 				if ($override) {
 					$one[$valueName] = $two[$valueName];
