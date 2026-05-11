@@ -18,7 +18,7 @@
 		"nette/di": "^3.2",
 		"nette/utils": "^4.0",
 		"nextras/dbal": "^5.0",
-		"nextras/orm": "^5.0",
+		"nextras/orm": "^5.1",
 		"webovac/generator": "dev-main",
 		"stepapo/utils": "^1.0"
 	},
