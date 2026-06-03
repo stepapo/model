@@ -23,6 +23,7 @@ class MysqlProcessor implements DbProcessor
 	private Definition $definition;
 	private Definition $oldDefinition;
 	private Printer $printer;
+	private bool $fulltext;
 	private array $steps = [
 		'dropSchema' => [],
 		'dropSequence' => [],
@@ -471,7 +472,7 @@ class MysqlProcessor implements DbProcessor
 
 	private function column(Schema $schema, Table $table, Column $column): string
 	{
-		if ($column->type === 'fulltext') {
+		if ($column->type === 'fulltext' && $this->fulltext) {
 			$this->dropFulltext($schema, $table, $column);
 			$this->createFulltext($schema, $table, $column);
 		}
@@ -567,6 +568,13 @@ class MysqlProcessor implements DbProcessor
 	public function setDefaultSchema(string $defaultSchema): self
 	{
 		$this->defaultSchema = $defaultSchema;
+		return $this;
+	}
+
+
+	public function setFulltext(bool $fulltext): PgsqlProcessor
+	{
+		$this->fulltext = $fulltext;
 		return $this;
 	}
 }

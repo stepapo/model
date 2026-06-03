@@ -12,6 +12,7 @@ use Stepapo\Model\Definition\PgsqlAnalyzer;
 use Stepapo\Model\Definition\PgsqlProcessor;
 use Stepapo\Model\Manipulation\Collector;
 use Stepapo\Utils\DI\StepapoExtension;
+use Webovac\Search\Lib\SearchHelper;
 
 
 class ModelExtension extends StepapoExtension
@@ -24,6 +25,7 @@ class ModelExtension extends StepapoExtension
 			'driver' => Expect::string()->required(),
 			'database' => Expect::string()->required(),
 			'schemas' => Expect::arrayOf('string'),
+			'fulltext' => Expect::bool(false),
 		]);
 	}
 
@@ -35,7 +37,8 @@ class ModelExtension extends StepapoExtension
 		$builder->addDefinition($this->prefix('definition.analyzer'))
 			->setFactory($this->config->driver === 'pgsql' ? PgsqlAnalyzer::class : MysqlAnalyzer::class);
 		$processor = $builder->addDefinition($this->prefix('definition.processor'))
-			->setFactory($this->config->driver === 'pgsql' ? PgsqlProcessor::class : MysqlProcessor::class, [$this->config->schemas ?: ($this->config->driver === 'pgsql' ? ['public'] : [$this->config->database])]);
+			->setFactory($this->config->driver === 'pgsql' ? PgsqlProcessor::class : MysqlProcessor::class, [$this->config->schemas ?: ($this->config->driver === 'pgsql' ? ['public'] : [$this->config->database])])
+			->addSetup('setFulltext', [$this->config->fulltext]);
 		if ($this->config->driver === 'mysql') {
 			$processor->addSetup('setDefaultSchema', [$this->config->database]);
 		}

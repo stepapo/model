@@ -8,4 +8,5 @@ namespace Stepapo\Model\Definition;
 interface DbProcessor
 {
 	function process(array $folders): int;
+	function setFulltext(bool $fulltext): DbProcessor;
 }

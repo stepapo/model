@@ -15,6 +15,7 @@ use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
 use Stepapo\Utils\Printer;
+use Webovac\Search\Lib\SearchHelper;
 
 
 class PgsqlProcessor implements DbProcessor
@@ -23,6 +24,7 @@ class PgsqlProcessor implements DbProcessor
 	private Definition $definition;
 	private Definition $oldDefinition;
 	private Printer $printer;
+	private bool $fulltext;
 	private array $steps = [
 		'dropSchema' => [],
 		'dropSequence' => [],
@@ -388,7 +390,7 @@ class PgsqlProcessor implements DbProcessor
 
 	private function createColumn(Schema $schema, Table $table, Column $column): void
 	{
-		if ($column->type === 'fulltext') {
+		if ($column->type === 'fulltext' && $this->fulltext) {
 			$this->createFulltext($schema, $table, $column);
 		}
 		if ($column->auto) {
@@ -497,7 +499,7 @@ class PgsqlProcessor implements DbProcessor
 
 	private function column(Schema $schema, Table $table, Column $column): string
 	{
-		if ($column->type === 'fulltext') {
+		if ($column->type === 'fulltext' && $this->fulltext) {
 			$this->createFulltext($schema, $table, $column);
 		}
 		$c = [];
@@ -589,8 +591,7 @@ class PgsqlProcessor implements DbProcessor
 			'datetime' => 'timestamp',
 			'dateinterval' => 'interval',
 			'float' => 'numeric',
-			'fulltext' => 'tsvector',
-//			'fulltext' => 'text',
+			'fulltext' => $this->fulltext ? 'tsvector' : 'text',
 		};
 	}
 
@@ -621,5 +622,12 @@ class PgsqlProcessor implements DbProcessor
 		foreach ($this->steps as $step => $queries) {
 			$this->steps[$step] = [];
 		}
+	}
+
+
+	public function setFulltext(bool $fulltext): PgsqlProcessor
+	{
+		$this->fulltext = $fulltext;
+		return $this;
 	}
 }
