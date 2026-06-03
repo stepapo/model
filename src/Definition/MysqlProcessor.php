@@ -572,7 +572,7 @@ class MysqlProcessor implements DbProcessor
 	}
 
 
-	public function setFulltext(bool $fulltext): PgsqlProcessor
+	public function setFulltext(bool $fulltext): MysqlProcessor
 	{
 		$this->fulltext = $fulltext;
 		return $this;
