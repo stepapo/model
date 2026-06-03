@@ -105,6 +105,16 @@ abstract class StepapoRepository extends Repository implements Injectable
 	}
 
 
+	public function getBy(array $conds): ?StepapoEntity
+	{
+		try {
+			return parent::getBy($conds);
+		} catch (QueryException $e) {
+			return null;
+		}
+	}
+
+
 	public function delete(StepapoEntity $entity): void
 	{
 		$this->onBeforeRemove($entity);
