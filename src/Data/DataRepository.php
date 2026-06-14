@@ -109,6 +109,12 @@ abstract class DataRepository implements Service, Injectable
 	}
 
 
+	public function removeItem(mixed $key): void
+	{
+		$this->cache->remove(lcfirst($this->getName()) . '/' . $key);
+	}
+
+
 	protected function addItemToCollection(mixed $key, ?Item $item = null): void
 	{
 		if (!isset($this->loadedCollection) || !array_key_exists($key, (array) $this->loadedCollection)) {
