@@ -12,7 +12,6 @@ use Stepapo\Model\Definition\PgsqlAnalyzer;
 use Stepapo\Model\Definition\PgsqlProcessor;
 use Stepapo\Model\Manipulation\Collector;
 use Stepapo\Utils\DI\StepapoExtension;
-use Webovac\Search\Lib\SearchHelper;
 
 
 class ModelExtension extends StepapoExtension
