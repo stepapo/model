@@ -24,9 +24,8 @@ class Table extends Config
 	#[SkipInComparison] public ?string $entity = null;
 
 
-	public function getPhpName()
+	public function getPhpName(): string
 	{
-
 		return $this->entity ?: ucfirst(StringHelper::camelize($this->name));
 	}
 

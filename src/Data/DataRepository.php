@@ -9,6 +9,7 @@ use Nette\Caching\Cache;
 use Nette\Caching\Storage;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Repository\IRepository;
+use Stepapo\Model\Orm\StepapoEntity;
 use Stepapo\Utils\Injectable;
 use Stepapo\Utils\Service;
 use Webovac\Core\Lib\CmsCache;
@@ -53,6 +54,7 @@ abstract class DataRepository implements Service, Injectable
 	{
 		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
 		$collection = new Collection;
+		/** @var StepapoEntity $entity */
 		foreach ($this->getOrmRepository()->findAll() as $entity) {
 			$key = $this->getIdentifier($entity);
 			$item = $entity->getData(forCache: true);
@@ -74,15 +76,14 @@ abstract class DataRepository implements Service, Injectable
 	protected function getName(): string
 	{
 		$className = preg_replace('~^.+\\\\~', '', get_class($this));
-		assert($className !== null);
 		return str_replace('DataRepository', '', $className);
 	}
 
 
 	protected function getOrmRepository(): IRepository
 	{
-		$name = $this->getName();
-		return $this->orm->getRepository("Build\\Model\\$name\\{$name}Repository");
+		$name = lcfirst($this->getName());
+		return $this->orm->getRepositoryByName("{$name}Repository");
 	}
 
 

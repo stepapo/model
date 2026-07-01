@@ -80,7 +80,7 @@ class PgsqlProcessor implements DbProcessor
 							$this->printer->printText(" $query->item", 'white');
 						}
 					}
-					$this->dbal->query($query->sql);
+					$this->dbal->query($query->sql); // @phpstan-ignore argument.type
 					if ($query->text) {
 						$this->printer->printOk();
 					}
@@ -116,7 +116,7 @@ class PgsqlProcessor implements DbProcessor
 	}
 
 
-	private function processType(string $type, array $schemas)
+	private function processType(string $type, array $schemas): void
 	{
 		foreach ($schemas as $schemaName => $setup) {
 			/** @var Schema $schema */
@@ -126,13 +126,14 @@ class PgsqlProcessor implements DbProcessor
 	}
 
 
-	private function processSchema(string $type, Schema $schema, array $setup)
+	private function processSchema(string $type, Schema $schema, array $setup): void
 	{
 		if (isset($setup['all']) && $setup['all'] === true) {
 			(fn() => match ($type) {
 				'create' => $this->createSchema($schema),
 				'remove' => $this->removeSchema($schema),
 				'update' => throw new InvalidArgumentException("Type 'update' cannot be used with 'all' in schema '$schema->name'."),
+				default => throw new InvalidArgumentException("Type '$type' cannot be used with 'all' in schema '$schema->name'."),
 			})();
 			return;
 		}
@@ -144,13 +145,14 @@ class PgsqlProcessor implements DbProcessor
 	}
 
 
-	private function processTable(string $type, Schema $schema, Table $table, array $setup)
+	private function processTable(string $type, Schema $schema, Table $table, array $setup): void
 	{
 		if (isset($setup['all']) && $setup['all'] === true) {
 			(fn() => match ($type) {
 				'create' => $this->createTable($schema, $table),
 				'remove' => $this->removeTable($schema, $table),
 				'update' => throw new InvalidArgumentException("Type 'update' cannot be used with 'all' in table '$schema->name.$table->name'."),
+				default => throw new InvalidArgumentException("Type '$type' cannot be used with 'all' in table '$schema->name.$table->name'."),
 			})();
 			return;
 		}
@@ -159,6 +161,7 @@ class PgsqlProcessor implements DbProcessor
 				'create' => throw new InvalidArgumentException("Type 'create' cannot be used with 'primaryKey' in table '$table->name'."),
 				'remove' => throw new InvalidArgumentException("Type 'remove' cannot be used with 'primaryKey' in table '$table->name'."),
 				'update' => $this->updatePrimary($schema, $table),
+				default => throw new InvalidArgumentException("Type '$type' cannot be used with 'primaryKey' in table '$table->name'."),
 			})();
 			return;
 		}
@@ -189,42 +192,46 @@ class PgsqlProcessor implements DbProcessor
 	}
 
 
-	private function processColumn(string $type, Schema $schema, Table $table, Column $column)
+	private function processColumn(string $type, Schema $schema, Table $table, Column $column): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createColumn($schema, $table, $column),
 			'remove' => $this->removeColumn($schema, $table, $column),
 			'update' => $this->updateColumn($schema, $table, $column),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with column '$column->name' in table '$table->name."),
 		})();
 	}
 
 
-	private function processForeignKey(string $type, Schema $schema, Table $table, Foreign $foreignKey)
+	private function processForeignKey(string $type, Schema $schema, Table $table, Foreign $foreignKey): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createForeign($schema, $table, $foreignKey),
 			'remove' => $this->removeForeign($schema, $table, $foreignKey),
 			'update' => $this->updateForeign($schema, $table, $foreignKey),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with foreign key '$foreignKey->name' in table '$table->name."),
 		})();
 	}
 
 
-	private function processIndex(string $type, Schema $schema, Table $table, Index $index)
+	private function processIndex(string $type, Schema $schema, Table $table, Index $index): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createIndex($schema, $table, $index),
 			'update' => $this->updateIndex($schema, $table, $index),
 			'remove' => $this->removeIndex($schema, $table, $index),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with index '$index->name' in table '$table->name'."),
 		})();
 	}
 
 
-	private function processUniqueKey(string $type, Schema $schema, Table $table, Unique $uniqueKey)
+	private function processUniqueKey(string $type, Schema $schema, Table $table, Unique $uniqueKey): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createUnique($schema, $table, $uniqueKey),
 			'update' => $this->updateUnique($schema, $table, $uniqueKey),
 			'remove' => $this->removeUnique($schema, $table, $uniqueKey),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with unique key '$uniqueKey->name' in table '$table->name'."),
 		})();
 	}
 
@@ -346,6 +353,7 @@ class PgsqlProcessor implements DbProcessor
 		foreach ($index->columns as $column) {
 			$c[] = "\"$column\"";
 		}
+		assert(is_string($index->name));
 		$this->addQuery(new Query(
 			'createIndex',
 			"CREATE INDEX \"$index->name\" ON \"$schema->name\".\"$table->name\" (" . implode(", ", $c) . ")",
@@ -358,6 +366,7 @@ class PgsqlProcessor implements DbProcessor
 
 	private function removeIndex(Schema $schema, Table $table, Index $index): void
 	{
+		assert(is_string($index->name));
 		$this->addQuery(new Query(
 			'dropIndex',
 			"DROP INDEX IF EXISTS \"$schema->name\".\"$index->name\"",
@@ -436,6 +445,7 @@ class PgsqlProcessor implements DbProcessor
 
 	private function createUnique(Schema $schema, Table $table, Unique $unique): void
 	{
+		assert(is_string($unique->name));
 		$this->addQuery(new Query(
 			'alterTableAdd',
 			"ALTER TABLE \"$schema->name\".\"$table->name\" ADD CONSTRAINT \"$unique->name\" " . $this->unique($unique),
@@ -448,6 +458,7 @@ class PgsqlProcessor implements DbProcessor
 
 	private function removeUnique(Schema $schema, Table $table, Unique $unique): void
 	{
+		assert(is_string($unique->name));
 		$this->addQuery(new Query(
 			'alterTableDrop',
 			"ALTER TABLE \"$schema->name\".\"$table->name\" DROP CONSTRAINT \"$unique->name\"",
@@ -591,6 +602,7 @@ class PgsqlProcessor implements DbProcessor
 			'dateinterval' => 'interval',
 			'float' => 'numeric',
 			'fulltext' => $this->fulltext ? 'tsvector' : 'text',
+			default => 'text',
 		};
 	}
 
@@ -611,6 +623,7 @@ class PgsqlProcessor implements DbProcessor
 				'string' => "'$default'",
 				'text' => "'$default'",
 				'datetime' => "$default",
+				default => "$default",
 			}
 		};
 	}

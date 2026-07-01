@@ -11,7 +11,6 @@ use Nette\Utils\Strings;
 use Nextras\Dbal\Drivers\Exception\QueryException;
 use Nextras\Orm\Collection\Functions\CollectionFunction;
 use Nextras\Orm\Entity\Entity;
-use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Mapper\IMapper;
 use Nextras\Orm\Repository\IDependencyProvider;
 use Nextras\Orm\Repository\Repository;
@@ -22,7 +21,10 @@ use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
 use Stepapo\Utils\Injectable;
 
 
-abstract class StepapoRepository extends Repository implements Injectable
+/**
+ * @method StepapoMapper getMapper()
+ */
+abstract class StepapoRepository extends Repository implements IStepapoRepository, Injectable
 {
 	#[Inject] public StepapoConditionParser $conditionParser;
 	/** @var StepapoOrmFunction[] */ private array $functions;
@@ -41,9 +43,10 @@ abstract class StepapoRepository extends Repository implements Injectable
 	}
 
 
-	public function create(): IEntity
+	public function create(): StepapoEntity
 	{
 		$class = new ReflectionClass($this->getEntityClassName([]));
+		/** @var StepapoEntity $entity */
 		$entity = $class->newInstance();
 		$this->attach($entity);
 		return $entity;
@@ -65,7 +68,7 @@ abstract class StepapoRepository extends Repository implements Injectable
 	 */
 	public function createFromDataAndReturnResult(
 		Item $data,
-		?StepapoEntity $original = null,
+		?IStepapoEntity $original = null,
 		?Person $person = null,
 		?DateTimeInterface $date = null,
 		bool $fromNeon = false,
@@ -83,12 +86,12 @@ abstract class StepapoRepository extends Repository implements Injectable
 	 */
 	public function createFromData(
 		Item $data,
-		?StepapoEntity $original = null,
+		?IStepapoEntity $original = null,
 		?Person $person = null,
 		?DateTimeInterface $date = null,
 		bool $fromNeon = false,
 		string $namespace = 'cms',
-	): StepapoEntity
+	): IStepapoEntity
 	{
 		$result = $this->createFromDataAndReturnResult($data, $original, $person, $date, $fromNeon, $namespace);
 		return $result->entity;
@@ -98,7 +101,9 @@ abstract class StepapoRepository extends Repository implements Injectable
 	public function getById($id): ?StepapoEntity
 	{
 		try {
-			return parent::getById($id);
+			$entity = parent::getById($id);
+			assert(!$entity || $entity instanceof StepapoEntity);
+			return $entity;
 		} catch (QueryException $e) {
 			return null;
 		}
@@ -108,7 +113,9 @@ abstract class StepapoRepository extends Repository implements Injectable
 	public function getBy(array $conds): ?StepapoEntity
 	{
 		try {
-			return parent::getBy($conds);
+			$entity = parent::getBy($conds);
+			assert(!$entity || $entity instanceof StepapoEntity);
+			return $entity;
 		} catch (QueryException $e) {
 			return null;
 		}
@@ -118,7 +125,7 @@ abstract class StepapoRepository extends Repository implements Injectable
 	public function delete(StepapoEntity $entity): void
 	{
 		$this->onBeforeRemove($entity);
-		$this->mapper->delete($entity);
+		$this->getMapper()->delete($entity);
 		$this->onAfterRemove($entity);
 	}
 

@@ -96,7 +96,7 @@ class ToArrayConverter
 	}
 
 
-	private static function normalizeSelect(array $select): array
+	public static function normalizeSelect(array $select): array
 	{
 		$result = [];
 		foreach ($select as $key => $value) {
@@ -116,7 +116,7 @@ class ToArrayConverter
 	/**
 	 * for $key equals "a.b.c" stores $value to $tree["a"]["b"]["c"]
 	 */
-	private static function storeToTree(string $key, mixed $value, array &$tree, string $delimiter = ".")
+	public static function storeToTree(string $key, mixed $value, array &$tree, string $delimiter = "."): void
 	{
 		if (str_contains($key, $delimiter)) {
 			$temp = &$tree;

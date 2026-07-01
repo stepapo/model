@@ -14,6 +14,16 @@ use Stepapo\Model\Manipulation\Collector;
 use Stepapo\Utils\DI\StepapoExtension;
 
 
+/**
+ * @property object{
+ *     parameters: array,
+ *     testMode: bool,
+ *     driver: string,
+ *     database: string,
+ *     schemas: array<string>,
+ *     fulltext: bool,
+ * } $config
+ */
 class ModelExtension extends StepapoExtension
 {
 	public function getConfigSchema(): Schema

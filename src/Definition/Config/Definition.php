@@ -13,7 +13,7 @@ class Definition extends Config
 {
 	/** @var Schema[]|array */ #[ArrayOfType(Schema::class)] public array $schemas;
 
-	
+
 	public function __toString(): string
 	{
 		$result = "schemas:\n";

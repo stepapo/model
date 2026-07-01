@@ -16,7 +16,7 @@ class Unique extends Config
 	/** @var string[] */ #[ValueProperty, ToArray] public array $columns;
 
 
-	public function process(string $tableName)
+	public function process(string $tableName): void
 	{
 		if (!$this->name || !is_string($this->name)) {
 			sort($this->columns);

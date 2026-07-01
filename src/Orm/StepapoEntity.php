@@ -21,9 +21,9 @@ use Stepapo\Utils\Attribute\Type;
 use Stepapo\Utils\Injectable;
 
 
-abstract class StepapoEntity extends Entity implements Injectable
+abstract class StepapoEntity extends Entity implements IStepapoEntity, Injectable
 {
-	public function toArray(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, ?callable $checkProperty = null): array
+	public function toArrayWithSelect(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, ?callable $checkProperty = null): array
 	{
 		return ToArrayConverter::toArray($this, $mode, $select, checkProperty: $checkProperty);
 	}
@@ -35,11 +35,9 @@ abstract class StepapoEntity extends Entity implements Injectable
 	 */
 	public function getData(bool $neon = false, bool $forCache = false): Item
 	{
-		if (!method_exists($this, 'getDataClass')) {
-			throw new NotSupportedException('Entity does not have data class defined.');
-		}
-		$class = new ReflectionClass($this->getDataClass());
+		$class = new ReflectionClass($this->getDataClass()); // @phpstan-ignore argument.type
 		$data = $class->newInstance();
+		assert($data instanceof Item);
 		foreach ($class->getProperties() as $p) {
 			$name = $p->name;
 			$property = $this->getMetadata()->hasProperty($name) ? $this->getMetadata()->getProperty($name) : null;
@@ -82,8 +80,11 @@ abstract class StepapoEntity extends Entity implements Injectable
 		if (!$this->getMetadata()->hasProperty('title')) {
 			throw new NotSupportedException;
 		}
-		return $this->title ?: '';
+		return $this->title ?? '';
 	}
+
+
+	abstract public function getDataClass(): string;
 
 
 //	/**

@@ -27,9 +27,9 @@ class Foreign extends Config
 	#[SkipInComparison] public bool $reverseDontCache = false;
 
 
-	public function process(string $tableName)
+	public function process(string $tableName): void
 	{
-		if (!$this->name || !is_string($this->name)) {
+		if (!$this->name) {
 			$this->name = $tableName . '_' . $this->keyColumn . '_fk';
 		}
 	}

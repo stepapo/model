@@ -42,10 +42,10 @@ class StepapoConditionParser extends ConditionParser implements Service
 		'>' => CompareGreaterThanFunction::class,
 		'<=' => CompareSmallerThanEqualsFunction::class,
 		'<' => CompareSmallerThanFunction::class,
-		'~'	=> CompareLikeFunction::class,
+		'~' => CompareLikeFunction::class,
 	];
 
-	/** @var StepapoOrmFunction[] */ private array $functions = [];
+	/** @var array<string, string|StepapoOrmFunction> */ private array $functions = [];
 
 
 	/** @param StepapoOrmFunction[] $functions */
@@ -70,9 +70,9 @@ class StepapoConditionParser extends ConditionParser implements Service
 		$operator = $matches['operator'] ?? '=';
 		$function = $matches['function'] ?? null;
 		$condition = $this->parsePropertyFunction($condition);
-		return !$function || array_key_exists($function, self::AGGREGATE_FUNCTIONS) || $this->functions[$function] instanceof Comparable
+		return !$function || array_key_exists($function, self::AGGREGATE_FUNCTIONS) || $this->functions[$function] instanceof Comparable // @phpstan-ignore return.type
 			? [self::COMPARE_FUNCTIONS[$operator], $condition]
-			: $condition;
+			: [CompareEqualsFunction::class, $condition];
 	}
 
 
@@ -92,7 +92,7 @@ class StepapoConditionParser extends ConditionParser implements Service
 			}
 		}
 		return $function
-			? [is_string($collectionFunction) ? $collectionFunction : $collectionFunction::class, $path]
+			? [$collectionFunction::class, $path]
 			: $path;
 	}
 
@@ -112,7 +112,6 @@ class StepapoConditionParser extends ConditionParser implements Service
 
 		/** @var string $source */
 		$source = array_shift($matches);
-		assert(count($matches) > 0);
 		$tokens = explode('->', array_shift($matches));
 
 		if ($source === '') {

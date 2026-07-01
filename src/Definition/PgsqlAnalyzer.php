@@ -178,12 +178,12 @@ class PgsqlAnalyzer implements Analyzer
 	private function getIndexes(int $id): array
 	{
 		return $this->dbal->query("
-			SELECT 
+			SELECT
 				pg_index.indexrelid AS id,
 				pg_index.indexrelid::regclass as name
 			FROM pg_catalog.pg_index
 			JOIN pg_catalog.pg_class ON pg_class.oid = pg_index.indrelid
-			WHERE pg_class.oid = %i 
+			WHERE pg_class.oid = %i
 			AND pg_index.indisprimary = false
 			AND pg_index.indisunique = false
 		", $id)->fetchAll();
@@ -240,6 +240,7 @@ class PgsqlAnalyzer implements Analyzer
 			'timestamp' => 'datetime',
 			'numeric' => 'float',
 			'tsvector' => 'fulltext',
+			default => 'string',
 		};
 	}
 
@@ -250,6 +251,7 @@ class PgsqlAnalyzer implements Analyzer
 			'r' => 'restrict',
 			'c' => 'cascade',
 			'n' => 'set null',
+			default => 'set null',
 		};
 	}
 }

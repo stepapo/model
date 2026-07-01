@@ -6,9 +6,9 @@ namespace Stepapo\Model\Manipulation;
 
 use Build\Model\Orm;
 use Nextras\Dbal\Platforms\Data\Fqn;
-use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Model\Orm\PostProcessable;
+use Stepapo\Model\Orm\StepapoRepository;
 use Stepapo\Utils\Printer;
 use Stepapo\Utils\Service;
 
@@ -42,9 +42,10 @@ class Processor implements Service
 					foreach ($classes as $forceUpdates) {
 						foreach ($forceUpdates as $manipulation) {
 							$group = $groups[$manipulation->class] ?? throw new \LogicException("ManipulationGroup for class '$manipulation->class' not defined.");
+							/** @var StepapoRepository $repository */
 							$repository = $this->orm->getRepositoryByName($group->name . 'Repository');
 							foreach ($manipulation->items as $itemName => $item) {
-								$entity = $repository->getByData($item);
+								$entity = method_exists($repository, 'getByData') ? $repository->getByData($item) : null;
 								if ($entity) {
 									if (!$manipulation->forceUpdate) {
 										continue;
@@ -90,7 +91,7 @@ class Processor implements Service
 				$this->printer->printError();
 				$this->printer->printSeparator();
 				$end = microtime(true);
-				$this->printer->printLine(sprintf("%d items | %0.3f s | ERROR in item '%s' of repository '%s'", $count, $end - $start, $itemName, $group->name), 'red');
+				$this->printer->printLine(sprintf("%d items | %0.3f s | ERROR in item '%s' of repository '%s'", $count, $end - $start, $itemName ?? '', isset($group) ? $group->name : ''), 'red');
 				$this->printer->printLine($e->getMessage());
 				$this->printer->printLine($e->getTraceAsString());
 			}
@@ -101,13 +102,6 @@ class Processor implements Service
 			$this->printer->printLine($e->getTraceAsString());
 		}
 		return 0;
-	}
-
-
-	private function processManipulation(Manipulation $manipulation, array $groups): void
-	{
-
-
 	}
 
 

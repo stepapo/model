@@ -46,10 +46,13 @@ abstract class StepapoOrmFunction implements Service, CollectionFunction
 	}
 
 
-	protected function createDbalExpression(string $expression, array $args, array $columns = [], ?Aggregator $aggregator = null)
+	/**
+	 * @param list<mixed> $args
+	 */
+	protected function createDbalExpression(string $expression, array $args, array $columns = [], ?Aggregator $aggregator = null): DbalExpressionResult
 	{
 		return new DbalExpressionResult(
-			expression: $expression,
+			expression: $expression, // @phpstan-ignore argument.type
 			args: $args,
 			joins: array_merge(...array_map(fn(DbalExpressionResult $result) => $result->joins, $columns)),
 			groupBy: array_merge(...array_map(fn(DbalExpressionResult $result) => $result->groupBy, $columns)),

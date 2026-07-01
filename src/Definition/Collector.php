@@ -39,8 +39,9 @@ class Collector implements Service
 	/** @param Definition[] $definitions */
 	public function mergeDefinitions(array $definitions): Definition
 	{
+		$mergedDefinition = null;
 		foreach ($definitions as $definition) {
-			if (!isset($mergedDefinition)) {
+			if (!$mergedDefinition) {
 				$mergedDefinition = $definition;
 				continue;
 			}

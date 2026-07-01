@@ -47,6 +47,7 @@ class Column extends Config
 			'dateinterval' => '\DateInterval',
 			'float' => 'float',
 			'fulltext' => 'string',
+			default => 'string',
 		};
 	}
 
@@ -54,9 +55,9 @@ class Column extends Config
 	public function getNextrasType(?Foreign $foreign = null): string
 	{
 		return ($foreign ? $foreign->getPhpTable() : $this->getPhpType($foreign))
-			. ($this->null ? '|null' : '')
-			. ($this->private ? '|PrivateProperty' : '')
-			. ($this->internal ? '|InternalProperty' : '');
+			. ($this->null ? '|null' : '');
+//			. ($this->private ? '|PrivateProperty' : '')
+//			. ($this->internal ? '|InternalProperty' : '');
 	}
 
 
@@ -71,6 +72,7 @@ class Column extends Config
 					true => 'true',
 					0 => 'false',
 					false => 'false',
+					default => 'false',
 				},
 				'int' => (string) $this->default,
 				'bigint' => (string) $this->default,
@@ -79,8 +81,8 @@ class Column extends Config
 			}
 		};
 	}
-	
-	
+
+
 	public function __toString(): string
 	{
 		$s = [];

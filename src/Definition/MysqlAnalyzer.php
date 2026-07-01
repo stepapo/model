@@ -92,10 +92,10 @@ class MysqlAnalyzer implements Analyzer
 	private function getTables(string $schema): array
 	{
 		return $this->dbal->query("
-			SELECT 
+			SELECT
 				TABLE_NAME AS name
 			FROM information_schema.TABLES
-			WHERE TABLE_SCHEMA = %s 
+			WHERE TABLE_SCHEMA = %s
 			AND TABLE_TYPE = 'BASE TABLE'
 			ORDER BY TABLE_NAME
 		", $schema)->fetchAll();
@@ -105,7 +105,7 @@ class MysqlAnalyzer implements Analyzer
 	private function getColumns(string $schema, string $table): array
 	{
 		return $this->dbal->query("
-			SELECT 
+			SELECT
 				COLUMN_NAME AS name,
 				DATA_TYPE AS `type`,
 				COLUMN_DEFAULT as `default`,
@@ -178,7 +178,7 @@ class MysqlAnalyzer implements Analyzer
 	private function getIndexesWithColumns(string $schema, string $table): array
 	{
 		return $this->dbal->query("
-			SELECT 
+			SELECT
 				INDEX_NAME AS name,
 				TABLE_SCHEMA AS `schema`,
 				TABLE_NAME AS `table`,
@@ -247,6 +247,7 @@ class MysqlAnalyzer implements Analyzer
 			'time' => 'dateinterval',
 			'float' => 'float',
 			'decimal' => 'float',
+			default => 'string',
 		};
 	}
 

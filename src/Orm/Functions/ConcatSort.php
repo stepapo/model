@@ -15,7 +15,7 @@ class ConcatSort extends StepapoOrmFunction
 {
 	protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult
 	{
-		assert(is_array($args) && count($args) > 0);
+		assert(count($args) > 0);
 		$expression = $platform->getName() === 'pgsql' ? '' : 'CONCAT(';
 		$placeholders = [];
 		$values = [];

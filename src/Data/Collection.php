@@ -14,7 +14,7 @@ class Collection extends ArrayObject
 	{
 		$array = [];
 		foreach ($keys as $key) {
-			if ($item = $this->getById($key)) {
+			if ($item = $this->getByKey($key)) {
 				$array[$key] = $item;
 			}
 		}

@@ -61,8 +61,8 @@ class MysqlProcessor implements DbProcessor
 		foreach ($_SERVER['argv'] as $arg) {
 			if ($arg === '--reset') {
 				foreach ($this->schemas as $schema) {
-					$this->dbal->query("DROP DATABASE %table", $schema);
-					$this->dbal->query("CREATE DATABASE %table", $schema);
+					$this->dbal->query('DROP DATABASE %table', $schema);
+					$this->dbal->query('CREATE DATABASE %table', $schema);
 				}
 			}
 		}
@@ -70,7 +70,7 @@ class MysqlProcessor implements DbProcessor
 		$this->oldDefinition = $this->analyzer->getDefinition($this->schemas);
 		$this->prepare();
 		$count = 0;
-		$this->dbal->query("SET FOREIGN_KEY_CHECKS = %i", 0);
+		$this->dbal->query('SET FOREIGN_KEY_CHECKS = %i', 0);
 		try {
 			/** @var Query[] $queries */
 			foreach ($this->steps as $queries) {
@@ -82,7 +82,7 @@ class MysqlProcessor implements DbProcessor
 							$this->printer->printText(" $query->item", 'white');
 						}
 					}
-					$this->dbal->query($query->sql);
+					$this->dbal->query($query->sql); // @phpstan-ignore argument.type
 					if ($query->text) {
 						$this->printer->printOk();
 					}
@@ -94,16 +94,16 @@ class MysqlProcessor implements DbProcessor
 			}
 			$this->printer->printSeparator();
 			$end = microtime(true);
-			$this->printer->printLine(sprintf("%d queries | %0.3f s | OK", $count, $end - $start), 'lime');
-		} catch (\Exception $e) {
+			$this->printer->printLine(sprintf('%d queries | %0.3f s | OK', $count, $end - $start), 'lime');
+		} catch (\Throwable $e) {
 			$this->printer->printError();
 			$this->printer->printSeparator();
 			$end = microtime(true);
-			$this->printer->printLine(sprintf("%d queries | %0.3f s | ERROR in query '%s'", $count, $end - $start, $query->sql), 'red');
+			$this->printer->printLine(sprintf("%d queries | %0.3f s | ERROR in query '%s'", $count, $end - $start, isset($query) ? $query->sql : ''), 'red');
 			$this->printer->printLine($e->getMessage());
 			$this->printer->printLine($e->getTraceAsString());
 		}
-		$this->dbal->query("SET FOREIGN_KEY_CHECKS = %i", 1);
+		$this->dbal->query('SET FOREIGN_KEY_CHECKS = %i', 1);
 		return $count;
 	}
 
@@ -118,41 +118,41 @@ class MysqlProcessor implements DbProcessor
 	}
 
 
-	private function processType(string $type, array $schemas)
+	private function processType(string $type, array $schemas): void
 	{
 		foreach ($schemas as $schemaName => $setup) {
-			/** @var Schema $schema */
 			$schema = $this->definition->schemas[$schemaName] ?? $this->oldDefinition->schemas[$schemaName];
 			$this->processSchema($type, $schema, $setup);
 		}
 	}
 
 
-	private function processSchema(string $type, Schema $schema, array $setup)
+	private function processSchema(string $type, Schema $schema, array $setup): void
 	{
 		if (isset($setup['all']) && $setup['all'] === true) {
 			(fn() => match ($type) {
 				'create' => $this->createSchema($schema),
 				'remove' => $this->removeSchema($schema),
 				'update' => throw new InvalidArgumentException("Type 'update' cannot be used with 'all' in schema '$schema->name'."),
+				default => throw new InvalidArgumentException("Type '$type' cannot be used with 'all' in schema '$schema->name'."),
 			})();
 			return;
 		}
 		foreach ($setup as $tableName => $s) {
-			/** @var Table $table */
 			$table = $schema->tables[$tableName] ?? $this->oldDefinition->schemas[$schema->name]->tables[$tableName];
 			$this->processTable($type, $schema, $table, $s);
 		}
 	}
 
 
-	private function processTable(string $type, Schema $schema, Table $table, array $setup)
+	private function processTable(string $type, Schema $schema, Table $table, array $setup): void
 	{
 		if (isset($setup['all']) && $setup['all'] === true) {
 			(fn() => match ($type) {
 				'create' => $this->createTable($schema, $table),
 				'remove' => $this->removeTable($schema, $table),
 				'update' => throw new InvalidArgumentException("Type 'update' cannot be used with 'all' in table '$schema->name.$table->name'."),
+				default => throw new InvalidArgumentException("Type '$type' cannot be used with 'all' in table '$schema->name.$table->name'."),
 			})();
 			return;
 		}
@@ -161,6 +161,7 @@ class MysqlProcessor implements DbProcessor
 				'create' => throw new InvalidArgumentException("Type 'create' cannot be used with 'primaryKey' in table '$table->name'."),
 				'remove' => throw new InvalidArgumentException("Type 'remove' cannot be used with 'primaryKey' in table '$table->name'."),
 				'update' => $this->updatePrimary($schema, $table),
+				default => throw new InvalidArgumentException("Type '$type' cannot be used with 'primaryKey' in table '$table->name'."),
 			})();
 			return;
 		}
@@ -191,42 +192,46 @@ class MysqlProcessor implements DbProcessor
 	}
 
 
-	private function processColumn(string $type, Schema $schema, Table $table, Column $column)
+	private function processColumn(string $type, Schema $schema, Table $table, Column $column): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createColumn($schema, $table, $column),
 			'remove' => $this->removeColumn($schema, $table, $column),
 			'update' => $this->updateColumn($schema, $table, $column),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with column '$column->name' in table '$table->name."),
 		})();
 	}
 
 
-	private function processForeignKey(string $type, Schema $schema, Table $table, Foreign $foreignKey)
+	private function processForeignKey(string $type, Schema $schema, Table $table, Foreign $foreignKey): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createForeign($schema, $table, $foreignKey),
 			'remove' => $this->removeForeign($schema, $table, $foreignKey),
 			'update' => $this->updateForeign($schema, $table, $foreignKey),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with foreign key '$foreignKey->name' in table '$table->name."),
 		})();
 	}
 
 
-	private function processIndex(string $type, Schema $schema, Table $table, Index $index)
+	private function processIndex(string $type, Schema $schema, Table $table, Index $index): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createIndex($schema, $table, $index),
 			'update' => $this->updateIndex($schema, $table, $index),
 			'remove' => $this->removeIndex($schema, $table, $index),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with index '$index->name' in table '$table->name'."),
 		})();
 	}
 
 
-	private function processUniqueKey(string $type, Schema $schema, Table $table, Unique $uniqueKey)
+	private function processUniqueKey(string $type, Schema $schema, Table $table, Unique $uniqueKey): void
 	{
 		(fn() => match ($type) {
 			'create' => $this->createUnique($schema, $table, $uniqueKey),
 			'update' => $this->updateUnique($schema, $table, $uniqueKey),
 			'remove' => $this->removeUnique($schema, $table, $uniqueKey),
+			default => throw new InvalidArgumentException("Type '$type' cannot be used with unique key '$uniqueKey->name' in table '$table->name'."),
 		})();
 	}
 
@@ -297,7 +302,7 @@ class MysqlProcessor implements DbProcessor
 			'dropTable',
 			"DROP TABLE `$schema->name`.`$table->name`",
 			"$schema->name.$table->name",
-			'removing'
+			'removing',
 		));
 	}
 
@@ -319,9 +324,10 @@ class MysqlProcessor implements DbProcessor
 		foreach ($index->columns as $column) {
 			$c[] = "`$column`";
 		}
+		assert(is_string($index->name));
 		$this->addQuery(new Query(
 			'createIndex',
-			"CREATE INDEX `$index->name` ON `$schema->name`.`$table->name` (" . implode(", ", $c) . ")",
+			"CREATE INDEX `$index->name` ON `$schema->name`.`$table->name` (" . implode(', ', $c) . ')',
 			"$schema->name.$table->name",
 			'creating index',
 			$index->name,
@@ -331,6 +337,7 @@ class MysqlProcessor implements DbProcessor
 
 	private function removeIndex(Schema $schema, Table $table, Index $index): void
 	{
+		assert(is_string($index->name));
 		$this->addQuery(new Query(
 			'dropIndex',
 			"DROP INDEX `$index->name` ON `$schema->name`.`$table->name`",
@@ -362,13 +369,13 @@ class MysqlProcessor implements DbProcessor
 
 	private function dropFulltext(Schema $schema, Table $table, Column $column): void
 	{
-//		$this->addQuery(new Query(
-//			'dropIndex',
-//			"DROP INDEX `{$table->name}_{$column->name}_fx` ON `$schema->name`.`$table->name`",
-//			"$schema->name.$table->name",
-//			'removing fulltext',
-//			$column->name,
-//		));
+		//		$this->addQuery(new Query(
+		//			'dropIndex',
+		//			"DROP INDEX `{$table->name}_{$column->name}_fx` ON `$schema->name`.`$table->name`",
+		//			"$schema->name.$table->name",
+		//			'removing fulltext',
+		//			$column->name,
+		//		));
 	}
 
 
@@ -410,6 +417,7 @@ class MysqlProcessor implements DbProcessor
 
 	private function createUnique(Schema $schema, Table $table, Unique $unique): void
 	{
+		assert(is_string($unique->name));
 		$this->addQuery(new Query(
 			'alterTableAdd',
 			"ALTER TABLE `$schema->name`.`$table->name` ADD " . $this->unique($unique),
@@ -422,12 +430,13 @@ class MysqlProcessor implements DbProcessor
 
 	private function removeUnique(Schema $schema, Table $table, Unique $unique): void
 	{
+		assert(is_string($unique->name));
 		$this->addQuery(new Query(
 			'alterTableDropKey',
 			"ALTER TABLE `$schema->name`.`$table->name` DROP CONSTRAINT `$unique->name`",
 			"$schema->name.$table->name",
 			'removing unique key',
-			$unique->name
+			$unique->name,
 		));
 	}
 
@@ -458,7 +467,7 @@ class MysqlProcessor implements DbProcessor
 			"ALTER TABLE `$schema->name`.`$table->name` DROP CONSTRAINT `$foreignKey->name`",
 			"$schema->name.$table->name",
 			'removing foreign key',
-			$foreignKey->name
+			$foreignKey->name,
 		));
 	}
 
@@ -484,10 +493,10 @@ class MysqlProcessor implements DbProcessor
 		}
 		$c['null'] = $column->null ? 'NULL' : 'NOT NULL';
 		if ($column->default !== null) {
-			$c['default'] = "DEFAULT " . $this->getDefault($column->default, $column->type);
+			$c['default'] = 'DEFAULT ' . $this->getDefault($column->default, $column->type);
 		}
 		if ($column->auto) {
-			$c['auto'] = "AUTO_INCREMENT";
+			$c['auto'] = 'AUTO_INCREMENT';
 		}
 		return implode(' ', $c);
 	}
@@ -499,7 +508,7 @@ class MysqlProcessor implements DbProcessor
 		foreach ($key->columns as $column) {
 			$c[] = "`$column`";
 		}
-		return "PRIMARY KEY (" . implode(", ", $c) . ")";
+		return 'PRIMARY KEY (' . implode(', ', $c) . ')';
 	}
 
 
@@ -509,7 +518,7 @@ class MysqlProcessor implements DbProcessor
 		foreach ($key->columns as $column) {
 			$c[] = "`$column`";
 		}
-		return "UNIQUE INDEX `$key->name` (" . implode(", ", $c) . ")";
+		return "UNIQUE INDEX `$key->name` (" . implode(', ', $c) . ')';
 	}
 
 
@@ -520,15 +529,15 @@ class MysqlProcessor implements DbProcessor
 		$k['name'] = "`$foreignKey->name`";
 		$k['foreignKey'] = "FOREIGN KEY (`$foreignKey->keyColumn`)";
 		$k['references'] = "REFERENCES `$foreignSchema`.`$foreignKey->table` (`$foreignKey->column`)";
-		$k['onUpdate'] = "ON UPDATE " . strtoupper($foreignKey->onUpdate);
-		$k['onDelete'] = "ON DELETE " . strtoupper($foreignKey->onDelete);
+		$k['onUpdate'] = 'ON UPDATE ' . strtoupper($foreignKey->onUpdate);
+		$k['onDelete'] = 'ON DELETE ' . strtoupper($foreignKey->onDelete);
 		return implode(' ', $k);
 	}
 
 
 	private function getType(string $type): string
 	{
-		return match($type) {
+		return match ($type) {
 			'bool' => 'tinyint',
 			'int' => 'int',
 			'bigint' => 'bigint',
@@ -538,20 +547,22 @@ class MysqlProcessor implements DbProcessor
 			'dateinterval' => 'time',
 			'float' => 'float',
 			'fulltext' => 'text',
+			default => 'text',
 		};
 	}
 
 
 	private function getDefault(mixed $default, string $type): mixed
 	{
-		return match($default) {
-			'now' => "CURRENT_TIMESTAMP",
-			default => match($type) {
+		return match ($default) {
+			'now' => 'CURRENT_TIMESTAMP',
+			default => match ($type) {
 				'bool' => $default ? 1 : 0,
 				'int' => $default,
 				'bigint' => $default,
 				'string' => "'$default'",
 				'text' => "'$default'",
+				default => "'$default'",
 			}
 		};
 	}
@@ -572,7 +583,7 @@ class MysqlProcessor implements DbProcessor
 	}
 
 
-	public function setFulltext(bool $fulltext): MysqlProcessor
+	public function setFulltext(bool $fulltext): self
 	{
 		$this->fulltext = $fulltext;
 		return $this;

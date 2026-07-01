@@ -10,5 +10,5 @@ use Webovac\Core\Model\CmsEntity;
 
 interface PostProcessable
 {
-	function postProcessFromData(Item $data, CmsEntity $entity, bool $skipDefaults = false): CmsEntity;
+	function postProcessFromData(Item $data, IStepapoEntity $entity, bool $skipDefaults = false): IStepapoEntity;
 }

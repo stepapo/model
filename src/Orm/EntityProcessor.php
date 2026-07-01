@@ -34,7 +34,7 @@ class EntityProcessor
 
 
 	public function __construct(
-		public StepapoEntity $entity,
+		public IStepapoEntity $entity,
 		private Item $data,
 		private ?Person $person,
 		private ?DateTimeInterface $date,
@@ -44,7 +44,7 @@ class EntityProcessor
 	) {}
 
 
-	public function processEntity(?StepapoEntity $parent = null, ?string $parentName = null): EntityProcessorResult
+	public function processEntity(?IStepapoEntity $parent = null, ?string $parentName = null): EntityProcessorResult
 	{
 		$this->modifiedValues = new DiffList;
 		$metadata = $this->entity->getMetadata();
@@ -53,7 +53,7 @@ class EntityProcessor
 				$this->entity->$parentName = $parent;
 			}
 		}
-		$class = new ReflectionClass($this->entity->getDataClass());
+		$class = new ReflectionClass($this->entity->getDataClass()); // @phpstan-ignore argument.type
 		foreach ($this->data as $name => $value) {
 			if (in_array($name, [self::CREATED_AT, self::UPDATED_AT, self::CREATED_BY_PERSON, self::UPDATED_BY_PERSON, $parentName], true)) {
 				continue;
@@ -76,8 +76,10 @@ class EntityProcessor
 		$this->isModified = $this->isModified || $this->entity->isModified();
 		$this->isPersisted = $this->entity->isPersisted();
 		if (!$this->isPersisted) {
-			if ($metadata->hasProperty(self::CREATED_BY_PERSON)) {
-				$this->entity->{self::CREATED_BY_PERSON} = $this->person;
+			if ($this->entity instanceof Auditable) {
+				$this->entity->setCreatedByPerson($this->person);
+			} else if ($metadata->hasProperty(self::CREATED_BY_PERSON)) {
+				$this->entity->setValue(self::CREATED_BY_PERSON, $this->person);
 			}
 			$this->model->persist($this->entity);
 		}
@@ -94,14 +96,13 @@ class EntityProcessor
 			}
 		}
 		if ($this->isPersisted && $this->isModified) {
-			if ($metadata->hasProperty(self::UPDATED_BY_PERSON)) {
-				$this->entity->{self::UPDATED_BY_PERSON} = $this->person;
-			}
-			if ($metadata->hasProperty(self::UPDATED_AT)) {
-				$this->entity->{self::UPDATED_AT} = $this->date;
+			if ($this->entity instanceof Auditable) {
+				$this->entity
+					->setUpdatedByPerson($this->person)
+					->setUpdatedAt($this->date);
 			}
 			// kvůli indexu při změně translation:
-			if ($this->isModified && !$this->entity->isModified()) {
+			if (!$this->entity->isModified()) {
 				$this->entity->getRepository()->onAfterUpdate($this->entity);
 			}
 			$this->model->persist($this->entity);
@@ -205,6 +206,7 @@ class EntityProcessor
 	{
 		$name = $property->name;
 		$ids = [];
+		/** @var StepapoRepository $relatedRepository */
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
 		foreach ((array) $this->data->$name as $key => $relatedData) {

@@ -79,7 +79,7 @@ use Build\Model\Person\PersonData;
  *
  * @property DateTimeImmutable $createdAt {default now}
  * @property DateTimeImmutable|null $updatedAt
- * 
+ *
  * @method PersonData getData()
  */
 class Person extends Stepapo\Model\Orm\StepapoEntity

@@ -7,6 +7,9 @@ namespace Stepapo\Model;
 
 abstract class MigrationGroup
 {
+	/**
+	 * @param list<string> $dependencies
+	 */
 	public function __construct(
 		public string $name,
 		public string $class,
