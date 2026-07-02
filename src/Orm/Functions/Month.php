@@ -9,11 +9,18 @@ use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Orm\Collection\Aggregations\Aggregator;
 use Nextras\Orm\Collection\Functions\Result\DbalExpressionResult;
 use Nextras\Orm\Collection\Helpers\DbalQueryBuilderHelper;
+use function count, is_string;
 
 
 class Month extends StepapoOrmFunction implements Comparable
 {
-	protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult
+	protected function processInDb(
+		IPlatform $platform,
+		DbalQueryBuilderHelper $helper,
+		QueryBuilder $builder,
+		array $args,
+		?Aggregator $aggregator,
+	): DbalExpressionResult
 	{
 		assert(count($args) === 1 && is_string($args[0]));
 		$column = $helper->processExpression($builder, $args[0], $aggregator);

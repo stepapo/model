@@ -13,5 +13,6 @@ class Query
 		public ?string $table = null,
 		public ?string $text = null,
 		public ?string $item = null,
-	) {}
+	) {
+	}
 }

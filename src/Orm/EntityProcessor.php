@@ -19,6 +19,7 @@ use ReflectionClass;
 use ReflectionException;
 use Stepapo\Model\Data\Item;
 use Stepapo\Utils\Attribute\SkipInManipulation;
+use function in_array, is_string;
 
 
 class EntityProcessor
@@ -41,7 +42,8 @@ class EntityProcessor
 		private IModel $model,
 		private bool $fromNeon = false,
 		private string $namespace = 'cms',
-	) {}
+	) {
+	}
 
 
 	public function processEntity(?IStepapoEntity $parent = null, ?string $parentName = null): EntityProcessorResult
@@ -67,7 +69,7 @@ class EntityProcessor
 				continue;
 			} elseif (!$property->wrapper || $property->wrapper === DateTimeWrapper::class) {
 				$this->processScalar($property);
-			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
+			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class], true)) {
 				$this->processHasOne($property);
 			} elseif ($property->wrapper === ManyHasMany::class) {
 				$this->processManyHasMany($property);
@@ -78,7 +80,7 @@ class EntityProcessor
 		if (!$this->isPersisted) {
 			if ($this->entity instanceof Auditable) {
 				$this->entity->setCreatedByPerson($this->person);
-			} else if ($metadata->hasProperty(self::CREATED_BY_PERSON)) {
+			} elseif ($metadata->hasProperty(self::CREATED_BY_PERSON)) {
 				$this->entity->setValue(self::CREATED_BY_PERSON, $this->person);
 			}
 			$this->model->persist($this->entity);
@@ -206,8 +208,8 @@ class EntityProcessor
 	{
 		$name = $property->name;
 		$ids = [];
-		/** @var StepapoRepository $relatedRepository */
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
+		\assert($relatedRepository instanceof StepapoRepository);
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
 		foreach ((array) $this->data->$name as $key => $relatedData) {
 			if ($relatedData instanceof FileData) {
@@ -216,12 +218,12 @@ class EntityProcessor
 					continue;
 				}
 			}
-//			if (is_numeric($key)) {
-//				$relatedOriginal = $relatedRepository->getById($key);
-//			} else {
-			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
-//			}
-			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
+			//			if (is_numeric($key)) {
+			//				$relatedOriginal = $relatedRepository->getById($key);
+			//			} else {
+						$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
+			//			}
+						$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
 			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->model, $this->fromNeon);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
 			if ($processor->isModified) {

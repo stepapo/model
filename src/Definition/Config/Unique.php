@@ -8,6 +8,7 @@ use Stepapo\Utils\Attribute\KeyProperty;
 use Stepapo\Utils\Attribute\ToArray;
 use Stepapo\Utils\Attribute\ValueProperty;
 use Stepapo\Utils\Config;
+use function count, is_string;
 
 
 class Unique extends Config
@@ -27,6 +28,6 @@ class Unique extends Config
 
 	public function __toString(): string
 	{
-		return count($this->columns) > 1 ? "[" . implode(', ', $this->columns) . "]" : $this->columns[0];
+		return count($this->columns) > 1 ? '[' . implode(', ', $this->columns) . ']' : $this->columns[0];
 	}
 }

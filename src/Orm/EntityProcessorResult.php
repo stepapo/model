@@ -11,5 +11,6 @@ class EntityProcessorResult
 		public IStepapoEntity $entity,
 		public bool $isModified = false,
 		public ?DiffList $modifiedValues = null,
-	) {}
+	) {
+	}
 }

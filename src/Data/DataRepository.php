@@ -13,6 +13,7 @@ use Stepapo\Model\Orm\StepapoEntity;
 use Stepapo\Utils\Injectable;
 use Stepapo\Utils\Service;
 use Webovac\Core\Lib\CmsCache;
+use function array_key_exists;
 
 
 abstract class DataRepository implements Service, Injectable
@@ -54,8 +55,8 @@ abstract class DataRepository implements Service, Injectable
 	{
 		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
 		$collection = new Collection;
-		/** @var StepapoEntity $entity */
 		foreach ($this->getOrmRepository()->findAll() as $entity) {
+			\assert($entity instanceof StepapoEntity);
 			$key = $this->getIdentifier($entity);
 			$item = $entity->getData(forCache: true);
 			$this->cacheItem($key, $item);
@@ -75,7 +76,7 @@ abstract class DataRepository implements Service, Injectable
 
 	protected function getName(): string
 	{
-		$className = preg_replace('~^.+\\\\~', '', get_class($this));
+		$className = preg_replace('~^.+\\\~', '', static::class);
 		return str_replace('DataRepository', '', $className);
 	}
 
@@ -91,7 +92,7 @@ abstract class DataRepository implements Service, Injectable
 	public function getCollection(): Collection
 	{
 		if (!isset($this->collection)) {
-			$this->collection = $this->cache->load('collection', function() {
+			$this->collection = $this->cache->load('collection', function () {
 				$this->buildCache();
 				return $this->collection;
 			}, [Cache::Tags => lcfirst($this->getName())]);

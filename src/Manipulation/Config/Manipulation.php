@@ -21,7 +21,12 @@ class Manipulation extends Config
 	/** @var Item[]|array */ public array $items;
 
 
-	public static function createFromArray(mixed $config = [], mixed $key = null, bool $skipDefaults = false, mixed $parentKey = null): static
+	public static function createFromArray(
+		mixed $config = [],
+		mixed $key = null,
+		bool $skipDefaults = false,
+		mixed $parentKey = null,
+	): static
 	{
 		$manipulation = parent::createFromArray($config, $key, $skipDefaults);
 		foreach ($manipulation->items as $itemKey => $itemConfig) {

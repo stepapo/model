@@ -7,14 +7,16 @@ namespace Stepapo\Model\Definition\Config;
 use Stepapo\Utils\Attribute\ToArray;
 use Stepapo\Utils\Attribute\ValueProperty;
 use Stepapo\Utils\Config;
+use function count;
 
 
 class Primary extends Config
 {
 	/** @var string[] */ #[ValueProperty, ToArray] public array $columns;
 
+
 	public function __toString(): string
 	{
-		return count($this->columns) > 1 ? "[" . implode(', ', $this->columns) . "]" : $this->columns[0];
+		return count($this->columns) > 1 ? '[' . implode(', ', $this->columns) . ']' : $this->columns[0];
 	}
 }

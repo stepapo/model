@@ -10,11 +10,18 @@ use Nextras\Orm\Collection\Aggregations\Aggregator;
 use Nextras\Orm\Collection\Functions\Result\DbalExpressionResult;
 use Nextras\Orm\Collection\Helpers\DbalQueryBuilderHelper;
 use Stepapo\Utils\Orm\Has;
+use function count, is_string;
 
 
 class All extends StepapoOrmFunction implements CallableFromProperty
 {
-	protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult
+	protected function processInDb(
+		IPlatform $platform,
+		DbalQueryBuilderHelper $helper,
+		QueryBuilder $builder,
+		array $args,
+		?Aggregator $aggregator,
+	): DbalExpressionResult
 	{
 		assert(count($args) === 2 && is_string($args[0]));
 		return $helper->processExpression($builder, Has::all($args[0], $args[1]), $aggregator);

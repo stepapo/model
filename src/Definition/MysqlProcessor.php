@@ -15,6 +15,7 @@ use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
 use Stepapo\Utils\Printer;
+use function in_array, is_string, sprintf;
 
 
 class MysqlProcessor implements DbProcessor
@@ -369,13 +370,13 @@ class MysqlProcessor implements DbProcessor
 
 	private function dropFulltext(Schema $schema, Table $table, Column $column): void
 	{
-//		$this->addQuery(new Query(
-//			'dropIndex',
-//			"DROP INDEX `{$table->name}_{$column->name}_fx` ON `$schema->name`.`$table->name`",
-//			"$schema->name.$table->name",
-//			'removing fulltext',
-//			$column->name,
-//		));
+		//		$this->addQuery(new Query(
+		//			'dropIndex',
+		//			"DROP INDEX `{$table->name}_{$column->name}_fx` ON `$schema->name`.`$table->name`",
+		//			"$schema->name.$table->name",
+		//			'removing fulltext',
+		//			$column->name,
+		//		));
 	}
 
 

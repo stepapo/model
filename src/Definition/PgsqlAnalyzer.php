@@ -20,7 +20,8 @@ class PgsqlAnalyzer implements Analyzer
 {
 	public function __construct(
 		private Connection $dbal,
-	) {}
+	) {
+	}
 
 
 	public function getDefinition(array $schemas = ['public']): Definition
@@ -177,7 +178,7 @@ class PgsqlAnalyzer implements Analyzer
 
 	private function getIndexes(int $id): array
 	{
-		return $this->dbal->query("
+		return $this->dbal->query('
 			SELECT
 				pg_index.indexrelid AS id,
 				pg_index.indexrelid::regclass as name
@@ -186,39 +187,39 @@ class PgsqlAnalyzer implements Analyzer
 			WHERE pg_class.oid = %i
 			AND pg_index.indisprimary = false
 			AND pg_index.indisunique = false
-		", $id)->fetchAll();
+		', $id)->fetchAll();
 	}
 
 
 	private function getKeyColumns(int $id): array
 	{
-		return $this->dbal->query("
+		return $this->dbal->query('
 			SELECT pg_catalog.pg_get_indexdef(pg_attribute.attrelid, pg_attribute.attnum, true) AS column
 			FROM pg_catalog.pg_attribute
 			-- INDEX ID:
 			WHERE pg_attribute.attrelid = %i
 			ORDER BY pg_attribute.attnum
-		", $id)->fetchPairs(null, 'column');
+		', $id)->fetchPairs(null, 'column');
 	}
 
 
 	private function getDefault(mixed $default, string $type): mixed
 	{
 		if ($default) {
-			preg_match("/\'(.*)\'::character varying/", $default, $m);
+			preg_match("/\\'(.*)\\'::character varying/", $default, $m);
 			$default = $m[1] ?? $default;
 		}
-		return match($default) {
-			'now()' => "now",
-			default => match($type) {
+		return match ($default) {
+			'now()' => 'now',
+			default => match ($type) {
 				'bool' => match ($default) {
 					'true' => true,
 					'false' => false,
 					default => null,
 				},
-				'int' => is_null($default) ? null : (int) $default,
-				'bigint' => is_null($default) ? null : (int) $default,
-				'float' => is_null($default) ? null : (int) $default,
+				'int' => $default === null ? null : (int) $default,
+				'bigint' => $default === null ? null : (int) $default,
+				'float' => $default === null ? null : (int) $default,
 				default => $default,
 			}
 		};
@@ -228,7 +229,7 @@ class PgsqlAnalyzer implements Analyzer
 	private function getType(string $type): string
 	{
 		$type = strtolower($type);
-		return match($type) {
+		return match ($type) {
 			'bool' => 'bool',
 			'int2' => 'int',
 			'int4' => 'int',
@@ -247,7 +248,7 @@ class PgsqlAnalyzer implements Analyzer
 
 	private function getRestriction(string $restriction): string
 	{
-		return match($restriction) {
+		return match ($restriction) {
 			'r' => 'restrict',
 			'c' => 'cascade',
 			'n' => 'set null',

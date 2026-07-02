@@ -9,6 +9,7 @@ use Nette\Utils\Finder;
 use Stepapo\Model\Manipulation\Config\Manipulation;
 use Stepapo\Model\Manipulation\Config\ManipulationList;
 use Stepapo\Utils\Service;
+use function in_array, is_array;
 
 
 class Collector implements Service
@@ -17,14 +18,15 @@ class Collector implements Service
 		private array $parameters,
 		private bool $debugMode,
 		private bool $testMode,
-	) {}
+	) {
+	}
 
 
 	public function getManipulationList(array $folders): ManipulationList
 	{
 		$configs = [];
 		foreach ($folders as $folder) {
-			$files = Finder::findFiles("*.neon")->from($folder)->sortByName();
+			$files = Finder::findFiles('*.neon')->from($folder)->sortByName();
 			foreach ($files as $file) {
 				$configs[] = Manipulation::neonToArray($file->getPathname(), $this->parameters);
 			}
@@ -60,7 +62,7 @@ class Collector implements Service
 						$iteration = $config['iteration'] ?? 1;
 						$skipDefaults = $config['skipDefaults'] ?? false;
 						$manipulation = Manipulation::createFromArray($config, skipDefaults: $skipDefaults || $iteration > 1);
-					} catch (\Exception $e) {
+					} catch (\Throwable $e) {
 						throw new InvalidArgumentException("Error in class '$class': " . $e->getMessage());
 					}
 					$manipulationList->manipulations[$manipulation->iteration][$manipulation->class][$manipulation->forceUpdate] = $manipulation;
@@ -97,7 +99,7 @@ class Collector implements Service
 				if ($override && $valueName === 'tree' && isset($two[$valueName])) {
 					$one[$valueName] = $two[$valueName];
 				} else {
-					$one[$valueName] = $this->mergeItem($class, (string)$valueName, $one[$valueName] ?? [], $two[$valueName], $override);
+					$one[$valueName] = $this->mergeItem($class, (string) $valueName, $one[$valueName] ?? [], $two[$valueName], $override);
 				}
 			} elseif (isset($one[$valueName]) && $one[$valueName] !== $two[$valueName]) {
 				if ($override) {

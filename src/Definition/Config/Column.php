@@ -37,7 +37,7 @@ class Column extends Config
 
 	public function getPhpType(?Foreign $foreign = null): string
 	{
-		return $foreign ? $foreign->getPhpTable() : match($this->type) {
+		return $foreign ? $foreign->getPhpTable() : match ($this->type) {
 			'bool' => 'bool',
 			'int' => 'int',
 			'bigint' => 'int',
@@ -56,18 +56,18 @@ class Column extends Config
 	{
 		return ($foreign ? $foreign->getPhpTable() : $this->getPhpType($foreign))
 			. ($this->null ? '|null' : '');
-//			. ($this->private ? '|PrivateProperty' : '')
-//			. ($this->internal ? '|InternalProperty' : '');
+		//			. ($this->private ? '|PrivateProperty' : '')
+		//			. ($this->internal ? '|InternalProperty' : '');
 	}
 
 
 	public function getPhpDefault(): ?string
 	{
-		return match($this->default) {
+		return match ($this->default) {
 			null => null,
 			'now' => 'now',
-			default => match($this->type) {
-				'bool' => match($this->default) {
+			default => match ($this->type) {
+				'bool' => match ($this->default) {
 					1 => 'true',
 					true => 'true',
 					0 => 'false',
@@ -87,13 +87,13 @@ class Column extends Config
 	{
 		$s = [];
 		$s[] = "type: $this->type";
-		$s[] = "null: " . ($this->null ? 'true' : 'false');
+		$s[] = 'null: ' . ($this->null ? 'true' : 'false');
 		if ($this->default) {
 			$s[] = "default: $this->default";
 		}
 		if ($this->onUpdate) {
 			$s[] = "onUpdate: $this->onUpdate";
 		}
-		return "$this->name: [" . implode(', ', $s) . "]";
+		return "$this->name: [" . implode(', ', $s) . ']';
 	}
 }

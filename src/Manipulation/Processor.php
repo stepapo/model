@@ -11,6 +11,7 @@ use Stepapo\Model\Orm\PostProcessable;
 use Stepapo\Model\Orm\StepapoRepository;
 use Stepapo\Utils\Printer;
 use Stepapo\Utils\Service;
+use function count, sprintf;
 
 
 class Processor implements Service
@@ -42,8 +43,8 @@ class Processor implements Service
 					foreach ($classes as $forceUpdates) {
 						foreach ($forceUpdates as $manipulation) {
 							$group = $groups[$manipulation->class] ?? throw new \LogicException("ManipulationGroup for class '$manipulation->class' not defined.");
-							/** @var StepapoRepository $repository */
 							$repository = $this->orm->getRepositoryByName($group->name . 'Repository');
+							\assert($repository instanceof StepapoRepository);
 							foreach ($manipulation->items as $itemName => $item) {
 								$entity = method_exists($repository, 'getByData') ? $repository->getByData($item) : null;
 								if ($entity) {
@@ -86,8 +87,8 @@ class Processor implements Service
 				$this->printer->printSeparator();
 				$this->orm->flush();
 				$end = microtime(true);
-				$this->printer->printLine(sprintf("%d items | %0.3f s | OK", $count, $end - $start), 'lime');
-			} catch (\Exception $e) {
+				$this->printer->printLine(sprintf('%d items | %0.3f s | OK', $count, $end - $start), 'lime');
+			} catch (\Throwable $e) {
 				$this->printer->printError();
 				$this->printer->printSeparator();
 				$end = microtime(true);
@@ -95,9 +96,9 @@ class Processor implements Service
 				$this->printer->printLine($e->getMessage());
 				$this->printer->printLine($e->getTraceAsString());
 			}
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$end = microtime(true);
-			$this->printer->printLine(sprintf("%d items | %0.3f s | ERROR", $count, $end - $start), 'red');
+			$this->printer->printLine(sprintf('%d items | %0.3f s | ERROR', $count, $end - $start), 'red');
 			$this->printer->printLine($e->getMessage());
 			$this->printer->printLine($e->getTraceAsString());
 		}
@@ -111,7 +112,7 @@ class Processor implements Service
 		$sortedClasses = [];
 		$doneClasses = [];
 		$doneGroups = [];
-		while(count($classes) > count($sortedClasses)) {
+		while (count($classes) > count($sortedClasses)) {
 			$resolvable = false;
 			foreach ($classes as $name => $class) {
 				if (isset($doneClasses[$name])) {
@@ -149,6 +150,6 @@ class Processor implements Service
 				return $group->class;
 			}
 		}
-		throw new \InvalidArgumentException();
+		throw new \InvalidArgumentException;
 	}
 }

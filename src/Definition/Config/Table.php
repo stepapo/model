@@ -43,10 +43,10 @@ class Table extends Config
 			$result .= Strings::indent("primaryKey: $this->primaryKey\n", 1);
 		}
 		if ($this->uniqueKeys) {
-			$result .= Strings::indent("uniqueKeys: [" . implode(', ', $this->uniqueKeys) . "]\n", 1);
+			$result .= Strings::indent('uniqueKeys: [' . implode(', ', $this->uniqueKeys) . "]\n", 1);
 		}
 		if ($this->indexes) {
-			$result .= Strings::indent("indexes: [" . implode(', ', $this->indexes) . "]\n", 1);
+			$result .= Strings::indent('indexes: [' . implode(', ', $this->indexes) . "]\n", 1);
 		}
 		if ($this->foreignKeys) {
 			$result .= Strings::indent("foreignKeys:\n", 1);

@@ -21,7 +21,8 @@ abstract class StepapoOrmFunction implements Service, CollectionFunction
 {
 	public function __construct(
 		private IConnection $connection,
-	) {}
+	) {
+	}
 
 
 	public function processArrayExpression(
@@ -49,7 +50,12 @@ abstract class StepapoOrmFunction implements Service, CollectionFunction
 	/**
 	 * @param list<mixed> $args
 	 */
-	protected function createDbalExpression(string $expression, array $args, array $columns = [], ?Aggregator $aggregator = null): DbalExpressionResult
+	protected function createDbalExpression(
+		string $expression,
+		array $args,
+		array $columns = [],
+		?Aggregator $aggregator = null,
+	): DbalExpressionResult
 	{
 		return new DbalExpressionResult(
 			expression: $expression, // @phpstan-ignore argument.type
@@ -61,5 +67,11 @@ abstract class StepapoOrmFunction implements Service, CollectionFunction
 	}
 
 
-	abstract protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult;
+	abstract protected function processInDb(
+		IPlatform $platform,
+		DbalQueryBuilderHelper $helper,
+		QueryBuilder $builder,
+		array $args,
+		?Aggregator $aggregator,
+	): DbalExpressionResult;
 }

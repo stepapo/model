@@ -7,6 +7,7 @@ namespace Stepapo\Model\Orm;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Entity\Reflection\PropertyMetadata;
 use Nextras\Orm\Relationships\IRelationshipCollection;
+use function in_array, is_array, is_string;
 
 
 class ToArrayConverter
@@ -116,7 +117,7 @@ class ToArrayConverter
 	/**
 	 * for $key equals "a.b.c" stores $value to $tree["a"]["b"]["c"]
 	 */
-	public static function storeToTree(string $key, mixed $value, array &$tree, string $delimiter = "."): void
+	public static function storeToTree(string $key, mixed $value, array &$tree, string $delimiter = '.'): void
 	{
 		if (str_contains($key, $delimiter)) {
 			$temp = &$tree;

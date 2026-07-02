@@ -19,11 +19,16 @@ use Stepapo\Utils\Attribute\DontCache;
 use Stepapo\Utils\Attribute\SkipInManipulation;
 use Stepapo\Utils\Attribute\Type;
 use Stepapo\Utils\Injectable;
+use function in_array;
 
 
 abstract class StepapoEntity extends Entity implements IStepapoEntity, Injectable
 {
-	public function toArrayWithSelect(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, ?callable $checkProperty = null): array
+	public function toArrayWithSelect(
+		int $mode = ToArrayConverter::RELATIONSHIP_AS_IS,
+		?array $select = null,
+		?callable $checkProperty = null,
+	): array
 	{
 		return ToArrayConverter::toArray($this, $mode, $select, checkProperty: $checkProperty);
 	}
@@ -49,13 +54,13 @@ abstract class StepapoEntity extends Entity implements IStepapoEntity, Injectabl
 				continue;
 			} elseif (!$property->wrapper || $property->wrapper === DateTimeWrapper::class) {
 				$data->$name = $this->$name;
-			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class])) {
+			} elseif (in_array($property->wrapper, [OneHasOne::class, ManyHasOne::class], true)) {
 				$data->$name = $p->getAttributes(Type::class) ? $this->$name?->getData($neon, $forCache) : $this->$name?->getPersistedId();
 			} elseif ($property->wrapper === OneHasMany::class) {
 				foreach ($this->$name as $related) {
 					$relatedData = $related->getData($neon, $forCache);
 					$keyProperty = $relatedData::getKeyProperty();
-					if ($keyProperty && $related->$keyProperty instanceof StepapoEntity) {
+					if ($keyProperty && $related->$keyProperty instanceof self) {
 						$id = $related->$keyProperty->getPersistedId();
 					} else {
 						$id = $related->getPersistedId();
@@ -87,20 +92,20 @@ abstract class StepapoEntity extends Entity implements IStepapoEntity, Injectabl
 	abstract public function getDataClass(): string;
 
 
-//	/**
-//	 * @throws ReflectionException
-//	 */
-//	private function shouldGetData(ReflectionProperty $property): bool
-//	{
-//		$types = Type::fromReflection($property)->getTypes();
-//		foreach ($types as $type) {
-//			if (!$type->isClass()) {
-//				continue;
-//			}
-//			if ((new ReflectionClass($type->getSingleName()))->isSubclassOf(Item::class)) {
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
+	//	/**
+	//	 * @throws ReflectionException
+	//	 */
+	//	private function shouldGetData(ReflectionProperty $property): bool
+	//	{
+	//		$types = Type::fromReflection($property)->getTypes();
+	//		foreach ($types as $type) {
+	//			if (!$type->isClass()) {
+	//				continue;
+	//			}
+	//			if ((new ReflectionClass($type->getSingleName()))->isSubclassOf(Item::class)) {
+	//				return true;
+	//			}
+	//		}
+	//		return false;
+	//	}
 }

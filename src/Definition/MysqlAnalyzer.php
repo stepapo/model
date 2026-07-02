@@ -20,7 +20,8 @@ class MysqlAnalyzer implements Analyzer
 {
 	public function __construct(
 		private Connection $dbal,
-	) {}
+	) {
+	}
 
 
 	public function getDefinition(array $schemas = ['public']): Definition
@@ -154,7 +155,7 @@ class MysqlAnalyzer implements Analyzer
 
 	private function getForeignKeys(string $schema, string $table): array
 	{
-		return $this->dbal->query("
+		return $this->dbal->query('
 			SELECT
 				REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME AS name,
 				KEY_COLUMN_USAGE.TABLE_SCHEMA AS `schema`,
@@ -171,13 +172,13 @@ class MysqlAnalyzer implements Analyzer
 			AND KEY_COLUMN_USAGE.TABLE_NAME = %s
 			AND KEY_COLUMN_USAGE.ORDINAL_POSITION = 1
 			ORDER BY REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME
-		", $schema, $table)->fetchAll();
+		', $schema, $table)->fetchAll();
 	}
 
 
 	private function getIndexesWithColumns(string $schema, string $table): array
 	{
-		return $this->dbal->query("
+		return $this->dbal->query('
 			SELECT
 				INDEX_NAME AS name,
 				TABLE_SCHEMA AS `schema`,
@@ -189,32 +190,32 @@ class MysqlAnalyzer implements Analyzer
 			AND TABLE_NAME = %s
 			AND NON_UNIQUE = 1
 			ORDER BY INDEX_NAME
-		", $schema, $table)->fetchAll();
+		', $schema, $table)->fetchAll();
 	}
 
 
 	private function getKeyColumns(string $key, string $schema, string $table): array
 	{
-		return $this->dbal->query("
+		return $this->dbal->query('
 			SELECT COLUMN_NAME AS `column`
 			FROM information_schema.KEY_COLUMN_USAGE
 			WHERE CONSTRAINT_NAME = %s
 			AND TABLE_SCHEMA = %s
 			AND TABLE_NAME = %s
 			ORDER BY COLUMN_NAME
-		", $key, $schema, $table)->fetchPairs(null, 'column');
+		', $key, $schema, $table)->fetchPairs(null, 'column');
 	}
 
 
 	private function getDefault(mixed $default, string $type): mixed
 	{
 		if ($default) {
-			preg_match("/\'(.*)\'/", $default, $m);
+			preg_match("/\\'(.*)\\'/", $default, $m);
 			$default = $m[1] ?? $default;
 		}
-		return match($default) {
-			'current_timestamp()' => "now",
-			default => match($type) {
+		return match ($default) {
+			'current_timestamp()' => 'now',
+			default => match ($type) {
 				'bool' => match ($default) {
 					'1' => true,
 					'0' => false,
@@ -231,7 +232,7 @@ class MysqlAnalyzer implements Analyzer
 
 	private function getType(string $type): string
 	{
-		return match($type) {
+		return match ($type) {
 			'tinyint' => 'bool',
 			'int' => 'int',
 			'bigint' => 'bigint',

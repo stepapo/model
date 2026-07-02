@@ -5,30 +5,30 @@ declare(strict_types=1);
 namespace Stepapo\Model\Definition;
 
 use Nette\InvalidArgumentException;
-use Nette\Utils\FileInfo;
 use Nette\Utils\Finder;
 use Stepapo\Model\Definition\Config\Column;
 use Stepapo\Model\Definition\Config\Definition;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Utils\Service;
+use function array_key_exists, in_array;
 
 
 class Collector implements Service
 {
 	public function __construct(
 		private array $parameters,
-	) {}
+	) {
+	}
 
 
 	public function getDefinition(array $folders): Definition
 	{
 		$files = [];
 		foreach ($folders as $folder) {
-			$neonFiles = Finder::findFiles("*.neon")->from($folder);
+			$neonFiles = Finder::findFiles('*.neon')->from($folder);
 			$files = array_merge($files, $neonFiles->collect());
 		}
 		$definitions = [];
-		/** @var FileInfo $file */
 		foreach ($files as $file) {
 			$definitions[] = Definition::createFromNeon($file->getPathname(), $this->parameters);
 		}
@@ -92,7 +92,7 @@ class Collector implements Service
 		foreach ($mergedDefinition->schemas as $schema) {
 			ksort($mergedDefinition->schemas[$schema->name]->tables);
 			foreach ($schema->tables as $table) {
-				/*$mergedDefinition->schemas[$schema->name]->tables[$table->name] = */$this->sortColumns($table);
+				/*$mergedDefinition->schemas[$schema->name]->tables[$table->name] = */ $this->sortColumns($table);
 			}
 		}
 		return $mergedDefinition;

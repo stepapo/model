@@ -41,26 +41,26 @@ class Foreign extends Config
 	}
 
 
-//	public function getPhpSchema(): ?string
-//	{
-//		return $this->schema ? ucfirst(StringHelper::camelize($this->schema)) : null;
-//	}
+	//	public function getPhpSchema(): ?string
+	//	{
+	//		return $this->schema ? ucfirst(StringHelper::camelize($this->schema)) : null;
+	//	}
 
 
-	public function __toString(): string
-	{
-		$s = [];
-		if ($this->schema) {
-			$s[] = "schema: $this->schema";
+		public function __toString(): string
+		{
+			$s = [];
+			if ($this->schema) {
+				$s[] = "schema: $this->schema";
+			}
+			$s[] = "table: $this->table";
+			$s[] = "column: $this->column";
+			if ($this->onDelete !== 'cascade') {
+				$s[] = "onDelete: $this->onDelete";
+			}
+			if ($this->onUpdate !== 'cascade') {
+				$s[] = "onUpdate: $this->onUpdate";
+			}
+			return "$this->keyColumn: [" . implode(', ', $s) . ']';
 		}
-		$s[] = "table: $this->table";
-		$s[] = "column: $this->column";
-		if ($this->onDelete !== 'cascade') {
-			$s[] = "onDelete: $this->onDelete";
-		}
-		if ($this->onUpdate !== 'cascade') {
-			$s[] = "onUpdate: $this->onUpdate";
-		}
-		return "$this->keyColumn: [" . implode(', ', $s) . "]";
-	}
 }

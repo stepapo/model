@@ -9,11 +9,18 @@ use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Orm\Collection\Aggregations\Aggregator;
 use Nextras\Orm\Collection\Functions\Result\DbalExpressionResult;
 use Nextras\Orm\Collection\Helpers\DbalQueryBuilderHelper;
+use function count, is_array;
 
 
 class CoalesceSort extends StepapoOrmFunction
 {
-	protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult
+	protected function processInDb(
+		IPlatform $platform,
+		DbalQueryBuilderHelper $helper,
+		QueryBuilder $builder,
+		array $args,
+		?Aggregator $aggregator,
+	): DbalExpressionResult
 	{
 		assert(count($args) === 1 && is_array($args[0]) && count($args[0]) > 0);
 		$expression = 'COALESCE(';

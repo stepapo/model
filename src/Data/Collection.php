@@ -10,7 +10,7 @@ use ArrayObject;
 class Collection extends ArrayObject
 {
 	/** @return Collection<Item> */
-	public function findByKeys(array $keys): Collection
+	public function findByKeys(array $keys): self
 	{
 		$array = [];
 		foreach ($keys as $key) {
@@ -18,7 +18,7 @@ class Collection extends ArrayObject
 				$array[$key] = $item;
 			}
 		}
-		return new Collection($array);
+		return new self($array);
 	}
 
 

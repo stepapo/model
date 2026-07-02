@@ -14,5 +14,6 @@ abstract class MigrationGroup
 		public string $name,
 		public string $class,
 		public array $dependencies = [],
-	) {}
+	) {
+	}
 }

@@ -15,6 +15,7 @@ use Stepapo\Model\Definition\Config\Schema;
 use Stepapo\Model\Definition\Config\Table;
 use Stepapo\Model\Definition\Config\Unique;
 use Stepapo\Utils\Printer;
+use function is_string, sprintf;
 
 
 class PgsqlProcessor implements DbProcessor
@@ -60,8 +61,8 @@ class PgsqlProcessor implements DbProcessor
 		foreach ($_SERVER['argv'] as $arg) {
 			if ($arg === '--reset') {
 				foreach ($this->schemas as $schema) {
-					$this->dbal->query("DROP SCHEMA IF EXISTS %table CASCADE", $schema);
-					$this->dbal->query("CREATE SCHEMA %table", $schema);
+					$this->dbal->query('DROP SCHEMA IF EXISTS %table CASCADE', $schema);
+					$this->dbal->query('CREATE SCHEMA %table', $schema);
 				}
 			}
 		}
@@ -92,12 +93,12 @@ class PgsqlProcessor implements DbProcessor
 			}
 			$this->printer->printSeparator();
 			$end = microtime(true);
-			$this->printer->printLine(sprintf("%d queries | %0.3f s | OK", $count, $end - $start), 'lime');
-		} catch (\Exception $e) {
+			$this->printer->printLine(sprintf('%d queries | %0.3f s | OK', $count, $end - $start), 'lime');
+		} catch (\Throwable $e) {
 			$this->printer->printError();
 			$this->printer->printSeparator();
 			$end = microtime(true);
-			$this->printer->printLine(sprintf("%d queries | %0.3f s | ERROR in query '%s'", $count, $end - $start, $query->sql), 'red');
+			$this->printer->printLine(sprintf("%d queries | %0.3f s | ERROR in query '%s'", $count, $end - $start, isset($query) ? $query->sql : ''), 'red');
 			$this->printer->printLine($e->getMessage());
 			$this->printer->printLine($e->getTraceAsString());
 		}
@@ -119,7 +120,6 @@ class PgsqlProcessor implements DbProcessor
 	private function processType(string $type, array $schemas): void
 	{
 		foreach ($schemas as $schemaName => $setup) {
-			/** @var Schema $schema */
 			$schema = $this->definition->schemas[$schemaName] ?? $this->oldDefinition->schemas[$schemaName];
 			$this->processSchema($type, $schema, $setup);
 		}
@@ -138,7 +138,6 @@ class PgsqlProcessor implements DbProcessor
 			return;
 		}
 		foreach ($setup as $tableName => $s) {
-			/** @var Table $table */
 			$table = $schema->tables[$tableName] ?? $this->oldDefinition->schemas[$schema->name]->tables[$tableName];
 			$this->processTable($type, $schema, $table, $s);
 		}
@@ -330,7 +329,7 @@ class PgsqlProcessor implements DbProcessor
 			'dropTable',
 			"DROP TABLE IF EXISTS \"$schema->name\".\"$table->name\" CASCADE",
 			"$schema->name.$table->name",
-			'removing'
+			'removing',
 		));
 		$this->removeSequence($schema, $table);
 	}
@@ -340,7 +339,7 @@ class PgsqlProcessor implements DbProcessor
 	{
 		$this->addQuery(new Query(
 			'alterTable',
-			"ALTER TABLE \"$schema->name\".\"$table->name\" DROP CONSTRAINT \"$table->name" . "_pkey\", ADD " . $this->primary($table->primaryKey),
+			"ALTER TABLE \"$schema->name\".\"$table->name\" DROP CONSTRAINT \"$table->name" . '_pkey", ADD ' . $this->primary($table->primaryKey),
 			"$schema->name.$table->name",
 			'updating primary key',
 		));
@@ -356,7 +355,7 @@ class PgsqlProcessor implements DbProcessor
 		assert(is_string($index->name));
 		$this->addQuery(new Query(
 			'createIndex',
-			"CREATE INDEX \"$index->name\" ON \"$schema->name\".\"$table->name\" (" . implode(", ", $c) . ")",
+			"CREATE INDEX \"$index->name\" ON \"$schema->name\".\"$table->name\" (" . implode(', ', $c) . ')',
 			"$schema->name.$table->name",
 			'creating index',
 			$index->name,
@@ -464,7 +463,7 @@ class PgsqlProcessor implements DbProcessor
 			"ALTER TABLE \"$schema->name\".\"$table->name\" DROP CONSTRAINT \"$unique->name\"",
 			"$schema->name.$table->name",
 			'removing unique key',
-			$unique->name
+			$unique->name,
 		));
 	}
 
@@ -495,7 +494,7 @@ class PgsqlProcessor implements DbProcessor
 			"ALTER TABLE \"$schema->name\".\"$table->name\" DROP CONSTRAINT \"$foreignKey->name\"",
 			"$schema->name.$table->name",
 			'removing foreign key',
-			$foreignKey->name
+			$foreignKey->name,
 		));
 	}
 
@@ -519,7 +518,7 @@ class PgsqlProcessor implements DbProcessor
 			$c['null'] = 'NOT NULL';
 		}
 		if ($column->default !== null) {
-			$c['default'] = "DEFAULT " . $this->getDefault($column->default, $column->type);
+			$c['default'] = 'DEFAULT ' . $this->getDefault($column->default, $column->type);
 		}
 		if ($column->auto) {
 			$this->createSequence($schema, $table);
@@ -562,7 +561,7 @@ class PgsqlProcessor implements DbProcessor
 		foreach ($key->columns as $column) {
 			$c[] = "\"$column\"";
 		}
-		return "PRIMARY KEY (" . implode(", ", $c) . ")";
+		return 'PRIMARY KEY (' . implode(', ', $c) . ')';
 	}
 
 
@@ -572,7 +571,7 @@ class PgsqlProcessor implements DbProcessor
 		foreach ($key->columns as $column) {
 			$c[] = "\"$column\"";
 		}
-		return "UNIQUE (" . implode(", ", $c) . ")";
+		return 'UNIQUE (' . implode(', ', $c) . ')';
 	}
 
 
@@ -583,15 +582,15 @@ class PgsqlProcessor implements DbProcessor
 		$k['name'] = "\"{$foreignKey->name}\"";
 		$k['foreignKey'] = "FOREIGN KEY (\"$foreignKey->keyColumn\")";
 		$k['references'] = "REFERENCES \"$foreignSchema\".\"$foreignKey->table\" (\"$foreignKey->column\")";
-		$k['onDelete'] = "ON DELETE " . strtoupper($foreignKey->onDelete);
-		$k['onUpdate'] = "ON UPDATE " . strtoupper($foreignKey->onUpdate);
+		$k['onDelete'] = 'ON DELETE ' . strtoupper($foreignKey->onDelete);
+		$k['onUpdate'] = 'ON UPDATE ' . strtoupper($foreignKey->onUpdate);
 		return implode(' ', $k);
 	}
 
 
 	private function getType(string $type): string
 	{
-		return match($type) {
+		return match ($type) {
 			'bool' => 'bool',
 //			'bool' => 'int2',
 			'int' => 'int4',
@@ -609,10 +608,10 @@ class PgsqlProcessor implements DbProcessor
 
 	private function getDefault(mixed $default, string $type): mixed
 	{
-		return match($default) {
-			'now' => "now()",
-			default => match($type) {
-				'bool' => match($default) {
+		return match ($default) {
+			'now' => 'now()',
+			default => match ($type) {
+				'bool' => match ($default) {
 					true => 'true',
 					false => 'false',
 					default => $default,
@@ -637,7 +636,7 @@ class PgsqlProcessor implements DbProcessor
 	}
 
 
-	public function setFulltext(bool $fulltext): PgsqlProcessor
+	public function setFulltext(bool $fulltext): self
 	{
 		$this->fulltext = $fulltext;
 		return $this;

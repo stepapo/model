@@ -13,8 +13,15 @@ use Stepapo\Model\Data\Item;
  */
 interface IStepapoEntity extends IEntity
 {
-	function toArrayWithSelect(int $mode = ToArrayConverter::RELATIONSHIP_AS_IS, ?array $select = null, ?callable $checkProperty = null): array;
+	function toArrayWithSelect(
+		int $mode = ToArrayConverter::RELATIONSHIP_AS_IS,
+		?array $select = null,
+		?callable $checkProperty = null,
+	): array;
+
 	function getData(bool $neon = false, bool $forCache = false): Item;
+
 	function getTitle(): string;
+
 	function getDataClass(): string;
 }

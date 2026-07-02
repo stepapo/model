@@ -85,7 +85,10 @@ class Comparator implements Service
 					}
 				}
 				foreach ($table->foreignKeys as $foreignKey) {
-					if (!isset($newTable->foreignKeys[$foreignKey->keyColumn]) || $newTable->foreignKeys[$foreignKey->keyColumn]->name !== $foreignKey->name) {
+					if (
+						!isset($newTable->foreignKeys[$foreignKey->keyColumn])
+						|| $newTable->foreignKeys[$foreignKey->keyColumn]->name !== $foreignKey->name
+					) {
 						$result['remove'][$schema->name][$table->name]['foreignKeys'][] = $foreignKey->name;
 					}
 				}

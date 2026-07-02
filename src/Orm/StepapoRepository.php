@@ -34,7 +34,7 @@ abstract class StepapoRepository extends Repository implements IStepapoRepositor
 	public function __construct(
 		IMapper $mapper,
 		IDependencyProvider|null $dependencyProvider = null,
-		array $functions = []
+		array $functions = [],
 	) {
 		foreach ($functions as $function) {
 			$this->functions[$function::class] = $function;
@@ -46,8 +46,8 @@ abstract class StepapoRepository extends Repository implements IStepapoRepositor
 	public function create(): StepapoEntity
 	{
 		$class = new ReflectionClass($this->getEntityClassName([]));
-		/** @var StepapoEntity $entity */
 		$entity = $class->newInstance();
+		\assert($entity instanceof StepapoEntity);
 		$this->attach($entity);
 		return $entity;
 	}

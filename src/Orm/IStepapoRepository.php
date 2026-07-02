@@ -18,7 +18,9 @@ use Stepapo\Model\Data\Item;
 interface IStepapoRepository extends IRepository
 {
 	function create(): StepapoEntity;
+
 	function createCollectionFunction(string $name): CollectionFunction;
+
 	function createFromDataAndReturnResult(
 		Item $data,
 		?IStepapoEntity $original = null,
@@ -27,6 +29,7 @@ interface IStepapoRepository extends IRepository
 		bool $fromNeon = false,
 		string $namespace = 'cms',
 	): EntityProcessorResult;
+
 	function createFromData(
 		Item $data,
 		?IStepapoEntity $original = null,
@@ -35,9 +38,14 @@ interface IStepapoRepository extends IRepository
 		bool $fromNeon = false,
 		string $namespace = 'cms',
 	): IStepapoEntity;
+
 	function getById($id): ?StepapoEntity;
+
 	function getBy(array $conds): ?StepapoEntity;
+
 	function delete(StepapoEntity $entity): void;
+
 	function createSlug(string $title, ?Entity $entity = null, string $separator = '-', int $num = 1): string;
+
 	function getConditionParser(): StepapoConditionParser;
 }

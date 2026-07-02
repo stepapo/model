@@ -23,6 +23,8 @@ use Stepapo\Model\Orm\Functions\CallableFromProperty;
 use Stepapo\Model\Orm\Functions\Comparable;
 use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
 use Stepapo\Utils\Service;
+use function array_key_exists;
+use const E_USER_DEPRECATED;
 
 
 class StepapoConditionParser extends ConditionParser implements Service
@@ -50,7 +52,7 @@ class StepapoConditionParser extends ConditionParser implements Service
 
 	/** @param StepapoOrmFunction[] $functions */
 	public function __construct(
-		array $functions
+		array $functions,
 	) {
 		foreach ($functions as $function) {
 			$rc = new \ReflectionClass($function);
@@ -87,7 +89,13 @@ class StepapoConditionParser extends ConditionParser implements Service
 		$function = $matches['function'] ?? null;
 		if ($function) {
 			$collectionFunction = $this->functions[$function] ?? null;
-			if (!$collectionFunction || (!array_key_exists($function, self::AGGREGATE_FUNCTIONS) && !$collectionFunction instanceof CallableFromProperty)) {
+			if (
+				!$collectionFunction
+				|| (
+					!array_key_exists($function, self::AGGREGATE_FUNCTIONS)
+					&& !$collectionFunction instanceof CallableFromProperty
+				)
+			) {
 				throw new InvalidArgumentException("Function '$function' does not exist.");
 			}
 		}
@@ -110,7 +118,6 @@ class StepapoConditionParser extends ConditionParser implements Service
 
 		array_shift($matches); // whole expression
 
-		/** @var string $source */
 		$source = array_shift($matches);
 		$tokens = explode('->', array_shift($matches));
 

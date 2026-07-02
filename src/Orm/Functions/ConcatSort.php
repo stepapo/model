@@ -9,11 +9,18 @@ use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Orm\Collection\Aggregations\Aggregator;
 use Nextras\Orm\Collection\Functions\Result\DbalExpressionResult;
 use Nextras\Orm\Collection\Helpers\DbalQueryBuilderHelper;
+use function count;
 
 
 class ConcatSort extends StepapoOrmFunction
 {
-	protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult
+	protected function processInDb(
+		IPlatform $platform,
+		DbalQueryBuilderHelper $helper,
+		QueryBuilder $builder,
+		array $args,
+		?Aggregator $aggregator,
+	): DbalExpressionResult
 	{
 		assert(count($args) > 0);
 		$expression = $platform->getName() === 'pgsql' ? '' : 'CONCAT(';

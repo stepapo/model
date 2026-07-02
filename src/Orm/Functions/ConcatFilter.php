@@ -11,11 +11,18 @@ use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Orm\Collection\Aggregations\Aggregator;
 use Nextras\Orm\Collection\Functions\Result\DbalExpressionResult;
 use Nextras\Orm\Collection\Helpers\DbalQueryBuilderHelper;
+use function count, is_array, is_string;
 
 
 class ConcatFilter extends StepapoOrmFunction
 {
-	protected function processInDb(IPlatform $platform, DbalQueryBuilderHelper $helper, QueryBuilder $builder, array $args, ?Aggregator $aggregator): DbalExpressionResult
+	protected function processInDb(
+		IPlatform $platform,
+		DbalQueryBuilderHelper $helper,
+		QueryBuilder $builder,
+		array $args,
+		?Aggregator $aggregator,
+	): DbalExpressionResult
 	{
 		assert(count($args) === 2 && is_array($args[0]) && count($args[0]) > 0 && is_string($args[1]));
 		$combinations = is_array($args[0][0]) ? $args[0] : [$args[0]];
