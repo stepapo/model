@@ -90,22 +90,4 @@ abstract class StepapoEntity extends Entity implements IStepapoEntity, Injectabl
 
 
 	abstract public function getDataClass(): string;
-
-
-	//	/**
-	//	 * @throws ReflectionException
-	//	 */
-	//	private function shouldGetData(ReflectionProperty $property): bool
-	//	{
-	//		$types = Type::fromReflection($property)->getTypes();
-	//		foreach ($types as $type) {
-	//			if (!$type->isClass()) {
-	//				continue;
-	//			}
-	//			if ((new ReflectionClass($type->getSingleName()))->isSubclassOf(Item::class)) {
-	//				return true;
-	//			}
-	//		}
-	//		return false;
-	//	}
 }

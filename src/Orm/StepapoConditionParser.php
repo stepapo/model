@@ -74,7 +74,7 @@ class StepapoConditionParser extends ConditionParser implements Service
 		$condition = $this->parsePropertyFunction($condition);
 		return !$function || array_key_exists($function, self::AGGREGATE_FUNCTIONS) || $this->functions[$function] instanceof Comparable // @phpstan-ignore return.type
 			? [self::COMPARE_FUNCTIONS[$operator], $condition]
-			: [CompareEqualsFunction::class, $condition];
+			: (array) $condition;
 	}
 
 
@@ -100,7 +100,7 @@ class StepapoConditionParser extends ConditionParser implements Service
 			}
 		}
 		return $function
-			? [$collectionFunction::class, $path]
+			? [is_string($collectionFunction) ? $collectionFunction : $collectionFunction::class, $path]
 			: $path;
 	}
 

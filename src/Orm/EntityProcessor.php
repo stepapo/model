@@ -218,12 +218,12 @@ class EntityProcessor
 					continue;
 				}
 			}
-			//			if (is_numeric($key)) {
-			//				$relatedOriginal = $relatedRepository->getById($key);
-			//			} else {
-						$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
-			//			}
-						$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
+			//if (is_numeric($key)) {
+			//	$relatedOriginal = $relatedRepository->getById($key);
+			//} else {
+			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
+			//}
+			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
 			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->model, $this->fromNeon);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);
 			if ($processor->isModified) {
