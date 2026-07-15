@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Stepapo\Model\Orm;
 
 use Nextras\Orm\Entity\IEntity;
+use Nextras\Orm\Entity\Reflection\PropertyMetadata;
 use Stepapo\Model\Data\Item;
 
 
@@ -13,6 +14,9 @@ use Stepapo\Model\Data\Item;
  */
 interface IStepapoEntity extends IEntity
 {
+	/**
+	 * @param callable(PropertyMetadata): bool|null $checkProperty
+	 */
 	function toArrayWithSelect(
 		int $mode = ToArrayConverter::RELATIONSHIP_AS_IS,
 		?array $select = null,

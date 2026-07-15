@@ -7,6 +7,7 @@ namespace Stepapo\Model\Orm;
 use Nette\NotSupportedException;
 use Nextras\Orm\Entity\Entity;
 use Nextras\Orm\Entity\PropertyWrapper\DateTimeWrapper;
+use Nextras\Orm\Entity\Reflection\PropertyMetadata;
 use Nextras\Orm\Relationships\ManyHasMany;
 use Nextras\Orm\Relationships\ManyHasOne;
 use Nextras\Orm\Relationships\OneHasMany;
@@ -24,6 +25,9 @@ use function in_array;
 
 abstract class StepapoEntity extends Entity implements IStepapoEntity, Injectable
 {
+	/**
+	 * @param callable(PropertyMetadata): bool|null $checkProperty
+	 */
 	public function toArrayWithSelect(
 		int $mode = ToArrayConverter::RELATIONSHIP_AS_IS,
 		?array $select = null,

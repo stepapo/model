@@ -592,7 +592,7 @@ class PgsqlProcessor implements DbProcessor
 	{
 		return match ($type) {
 			'bool' => 'bool',
-//			'bool' => 'int2',
+			//'bool' => 'int2',
 			'int' => 'int4',
 			'bigint' => 'int8',
 			'string' => 'varchar',
@@ -616,7 +616,7 @@ class PgsqlProcessor implements DbProcessor
 					false => 'false',
 					default => $default,
 				},
-//				'bool' => $default ? 1 : 0,
+				//'bool' => $default ? 1 : 0,
 				'int' => $default,
 				'bigint' => $default,
 				'string' => "'$default'",

@@ -7,6 +7,7 @@ namespace Stepapo\Model\Orm;
 use Build\Model\Person\Person;
 use DateTimeInterface;
 use Nette\DI\Attributes\Inject;
+use Nette\Utils\Arrays;
 use Nette\Utils\Strings;
 use Nextras\Dbal\Drivers\Exception\QueryException;
 use Nextras\Orm\Collection\Functions\CollectionFunction;
@@ -47,7 +48,7 @@ abstract class StepapoRepository extends Repository implements IStepapoRepositor
 	{
 		$class = new ReflectionClass($this->getEntityClassName([]));
 		$entity = $class->newInstance();
-		\assert($entity instanceof StepapoEntity);
+		assert($entity instanceof StepapoEntity);
 		$this->attach($entity);
 		return $entity;
 	}
@@ -124,9 +125,9 @@ abstract class StepapoRepository extends Repository implements IStepapoRepositor
 
 	public function delete(StepapoEntity $entity): void
 	{
-		$this->onBeforeRemove($entity);
+		Arrays::invoke($this->onBeforeRemove, $entity);
 		$this->getMapper()->delete($entity);
-		$this->onAfterRemove($entity);
+		Arrays::invoke($this->onAfterRemove, $entity);
 	}
 
 

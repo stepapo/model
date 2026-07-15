@@ -370,13 +370,15 @@ class MysqlProcessor implements DbProcessor
 
 	private function dropFulltext(Schema $schema, Table $table, Column $column): void
 	{
-		//$this->addQuery(new Query(
-		//	'dropIndex',
-		//	"DROP INDEX `{$table->name}_{$column->name}_fx` ON `$schema->name`.`$table->name`",
-		//	"$schema->name.$table->name",
-		//	'removing fulltext',
-		//	$column->name,
-		//));
+		/*
+		$this->addQuery(new Query(
+			'dropIndex',
+			"DROP INDEX `{$table->name}_{$column->name}_fx` ON `$schema->name`.`$table->name`",
+			"$schema->name.$table->name",
+			'removing fulltext',
+			$column->name,
+		));
+		*/
 	}
 
 

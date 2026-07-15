@@ -56,8 +56,8 @@ class Column extends Config
 	{
 		return ($foreign ? $foreign->getPhpTable() : $this->getPhpType($foreign))
 			. ($this->null ? '|null' : '');
-		//			. ($this->private ? '|PrivateProperty' : '')
-		//			. ($this->internal ? '|InternalProperty' : '');
+			//. ($this->private ? '|PrivateProperty' : '')
+			//. ($this->internal ? '|InternalProperty' : '');
 	}
 
 

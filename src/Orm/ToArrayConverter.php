@@ -18,6 +18,9 @@ class ToArrayConverter
 	public const int MAX_RECURSION_LEVEL = 2;
 
 
+	/**
+	 * @param callable(PropertyMetadata): bool|null $checkProperty
+	 */
 	public static function toArray(
 		IEntity $entity,
 		int $type = self::RELATIONSHIP_AS_IS,

@@ -44,7 +44,7 @@ class Processor implements Service
 						foreach ($forceUpdates as $manipulation) {
 							$group = $groups[$manipulation->class] ?? throw new \LogicException("ManipulationGroup for class '$manipulation->class' not defined.");
 							$repository = $this->orm->getRepositoryByName($group->name . 'Repository');
-							\assert($repository instanceof StepapoRepository);
+							assert($repository instanceof StepapoRepository);
 							foreach ($manipulation->items as $itemName => $item) {
 								$entity = method_exists($repository, 'getByData') ? $repository->getByData($item) : null;
 								if ($entity) {

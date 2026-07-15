@@ -56,7 +56,7 @@ abstract class DataRepository implements Service, Injectable
 		$this->cmsCache->clean([Cache::Tags => lcfirst($this->getName())]);
 		$collection = new Collection;
 		foreach ($this->getOrmRepository()->findAll() as $entity) {
-			\assert($entity instanceof StepapoEntity);
+			assert($entity instanceof StepapoEntity);
 			$key = $this->getIdentifier($entity);
 			$item = $entity->getData(forCache: true);
 			$this->cacheItem($key, $item);

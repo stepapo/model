@@ -209,7 +209,7 @@ class EntityProcessor
 		$name = $property->name;
 		$ids = [];
 		$relatedRepository = $this->model->getRepository($property->relationship->repository);
-		\assert($relatedRepository instanceof StepapoRepository);
+		assert($relatedRepository instanceof StepapoRepository);
 		$relatedClass = new ReflectionClass($relatedRepository->getEntityClassName([]));
 		foreach ((array) $this->data->$name as $key => $relatedData) {
 			if ($relatedData instanceof FileData) {
@@ -218,11 +218,7 @@ class EntityProcessor
 					continue;
 				}
 			}
-			//if (is_numeric($key)) {
-			//	$relatedOriginal = $relatedRepository->getById($key);
-			//} else {
 			$relatedOriginal = method_exists($relatedRepository, 'getByData') ? $relatedRepository->getByData($relatedData, $this->entity) : null;
-			//}
 			$relatedEntity = $relatedOriginal ?: $relatedClass->newInstance();
 			$processor = new self($relatedEntity, $relatedData, $this->person, $this->date, $this->model, $this->fromNeon);
 			$processor->processEntity(parent: $this->entity, parentName: $property->relationship->property);

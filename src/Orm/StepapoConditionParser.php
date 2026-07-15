@@ -23,7 +23,7 @@ use Stepapo\Model\Orm\Functions\CallableFromProperty;
 use Stepapo\Model\Orm\Functions\Comparable;
 use Stepapo\Model\Orm\Functions\StepapoOrmFunction;
 use Stepapo\Utils\Service;
-use function array_key_exists;
+use function array_key_exists, is_string;
 use const E_USER_DEPRECATED;
 
 
