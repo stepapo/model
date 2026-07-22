@@ -44,7 +44,7 @@ class MysqlAnalyzer implements Analyzer
 					$type = $this->getType($c->type);
 					$column->type = $type;
 					$column->default = $c->is_primary ? null : $this->getDefault($c->default, $type);
-					$column->null = $c->is_nullable === 1;
+					$column->nullable = $c->is_nullable === 1;
 					$column->auto = $c->is_autoincrement === 1;
 					$column->unsigned = $c->is_unsigned === 1;
 					$table->columns[$c->name] = $column;

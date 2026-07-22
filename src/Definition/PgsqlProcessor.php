@@ -514,7 +514,7 @@ class PgsqlProcessor implements DbProcessor
 		$c = [];
 		$c['name'] = "\"$column->name\"";
 		$c['type'] = $this->getType($column->type);
-		if (!$column->null) {
+		if (!$column->nullable) {
 			$c['null'] = 'NOT NULL';
 		}
 		if ($column->default !== null) {
@@ -538,7 +538,7 @@ class PgsqlProcessor implements DbProcessor
 		} else {
 			$c['type'] = "ALTER COLUMN \"$column->name\" TYPE " . $this->getType($column->type);
 		}
-		if (!$column->null) {
+		if (!$column->nullable) {
 			$c['null'] = "ALTER COLUMN \"$column->name\" SET NOT NULL";
 		} else {
 			$c['null'] = "ALTER COLUMN \"$column->name\" DROP NOT NULL";

@@ -26,7 +26,7 @@ class Collector implements Service
 	{
 		$configs = [];
 		foreach ($folders as $folder) {
-			$files = Finder::findFiles('*.neon')->from($folder)->sortByName();
+			$files = Finder::findFiles(['*.neon', '*.yml'])->from($folder)->sortByName();
 			foreach ($files as $file) {
 				$configs[] = Manipulation::neonToArray($file->getPathname(), $this->parameters);
 			}

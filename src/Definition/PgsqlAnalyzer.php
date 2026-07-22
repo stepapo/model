@@ -44,7 +44,7 @@ class PgsqlAnalyzer implements Analyzer
 					$type = $this->getType($c->type);
 					$column->type = $type;
 					$column->default = $c->is_primary ? null : $this->getDefault($c->default, $type);
-					$column->null = $c->is_nullable;
+					$column->nullable = $c->is_nullable;
 					$column->auto = $c->is_autoincrement;
 					$table->columns[$c->name] = $column;
 				}

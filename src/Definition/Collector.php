@@ -25,7 +25,7 @@ class Collector implements Service
 	{
 		$files = [];
 		foreach ($folders as $folder) {
-			$neonFiles = Finder::findFiles('*.neon')->from($folder);
+			$neonFiles = Finder::findFiles(['*.neon', '*.yml'])->from($folder);
 			$files = array_merge($files, $neonFiles->collect());
 		}
 		$definitions = [];

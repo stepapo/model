@@ -30,20 +30,20 @@ stepapo.model:
 
 Analyzes database schemas, tables and columns, compares to Definition configs and runs DDL queries if needed. Requires Nette DI and Nextras Dbal.
 
-- `config/definitions/db.neon`
+- `config/definitions/db.yml`
 
-```neon
+```yml
 schemas:
     public:
         tables:
             person:
                 columns:
-                    id: [type: int, null: false, auto: true]
-                    email: [type: string, null: false]
-                    first_name: [type: string, null: false]
-                    last_name: [type: string, null: false]
-                    created_at: [type: datetime, null: false, default: now]
-                    updated_at: [type: datetime, null: true]
+                    id: {type: int, nullable: false, auto: true}
+                    email: {type: string, nullable: false}
+                    first_name: {type: string, nullable: false}
+                    last_name: {type: string, nullable: false}
+                    created_at: {type: datetime, nullable: false, default: now}
+                    updated_at: {type: datetime, nullable: true}
                 primaryKey: id
                 uniqueKeys: [email]
 ```
@@ -115,9 +115,9 @@ class PersonRepository extends Stepapo\Model\Orm\StepapoRepository
 }
 ```
 
-- `config/manipulations/persons.neon`
+- `config/manipulations/persons.yml`
 
-```neon
+```yml
 class: Build\Model\Person\PersonData
 items:
     admin:

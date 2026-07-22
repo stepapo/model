@@ -14,7 +14,7 @@ class Column extends Config
 {
 	#[KeyProperty] public string $name;
 	public string $type;
-	public bool $null;
+	public bool $nullable;
 	public bool $auto = false;
 	public bool $unsigned = false;
 	public mixed $default = null;
@@ -55,7 +55,7 @@ class Column extends Config
 	public function getNextrasType(?Foreign $foreign = null): string
 	{
 		return ($foreign ? $foreign->getPhpTable() : $this->getPhpType($foreign))
-			. ($this->null ? '|null' : '');
+			. ($this->nullable ? '|null' : '');
 		//. ($this->private ? '|PrivateProperty' : '')
 		//. ($this->internal ? '|InternalProperty' : '');
 	}
@@ -87,7 +87,7 @@ class Column extends Config
 	{
 		$s = [];
 		$s[] = "type: $this->type";
-		$s[] = 'null: ' . ($this->null ? 'true' : 'false');
+		$s[] = 'null: ' . ($this->nullable ? 'true' : 'false');
 		if ($this->default) {
 			$s[] = "default: $this->default";
 		}

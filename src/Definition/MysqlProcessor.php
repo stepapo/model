@@ -494,7 +494,7 @@ class MysqlProcessor implements DbProcessor
 		if (in_array($column->type, ['string', 'text', 'fulltext'], true)) {
 			$c['collate'] = 'COLLATE utf8mb4_unicode_520_ci';
 		}
-		$c['null'] = $column->null ? 'NULL' : 'NOT NULL';
+		$c['null'] = $column->nullable ? 'NULL' : 'NOT NULL';
 		if ($column->default !== null) {
 			$c['default'] = 'DEFAULT ' . $this->getDefault($column->default, $column->type);
 		}
