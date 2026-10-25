@@ -28,10 +28,12 @@ class LikeFilter extends StepapoOrmFunction
 		$values = [];
 		$columns = [];
 		foreach ((array) $args[0] as $col) {
-			$parts[] = 'LOWER(%column) LIKE %_like_';
+			$parts[] = 'UNACCENT(LOWER(%column)) LIKE %_like_ OR LOWER(%column) LIKE %_like_';
 			$column = $helper->processExpression($builder, $col, $aggregator);
-			$values[] = $column->args[0];
 			$columns[] = $column;
+			$values[] = $column->args[0];
+			$values[] = Strings::lower($args[1]);
+			$values[] = $column->args[0];
 			$values[] = Strings::lower($args[1]);
 		}
 		$expression = implode(' OR ', $parts);
